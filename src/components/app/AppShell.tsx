@@ -7,6 +7,7 @@ import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { ChatPanel } from "./ChatPanel";
 import { AuthScreen, BanScreen } from "./AuthScreen";
+import { SnowEffect } from "./SnowEffect";
 import { SettingsDialog } from "./SettingsDialog";
 import { ProfileCardDialog } from "./ProfileCard";
 import { FairnessDialog } from "./FairnessDialog";
@@ -44,6 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
+      <SnowEffect />
       <div className="hidden h-full lg:block"><Sidebar collapsed={collapsed} onToggle={toggle} /></div>
       <Sheet open={mobileNav} onOpenChange={setMobileNav}>
         <SheetContent side="left" className="w-auto border-sidebar-border bg-sidebar p-0">
