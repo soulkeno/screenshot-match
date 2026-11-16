@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      <div className="hidden lg:block"><Sidebar collapsed={collapsed} onToggle={toggle} /></div>
+      <div className="hidden h-full lg:block"><Sidebar collapsed={collapsed} onToggle={toggle} /></div>
       <Sheet open={mobileNav} onOpenChange={setMobileNav}>
         <SheetContent side="left" className="w-auto border-sidebar-border bg-sidebar p-0">
           <SheetTitle className="sr-only">Menu</SheetTitle>

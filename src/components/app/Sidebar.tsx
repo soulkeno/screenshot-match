@@ -47,7 +47,9 @@ export function Sidebar({ collapsed, onToggle, onNavigate }: { collapsed: boolea
   return (
     <aside className={cn("flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200", collapsed ? "w-[76px]" : "w-[248px]")}>
       <div className={cn("flex h-16 items-center px-4", collapsed ? "justify-center" : "justify-between")}>
-        <Link to="/" onClick={onNavigate}><Logo compact={collapsed} /></Link>
+        {collapsed && onToggle ? (
+          <button onClick={onToggle} className="rounded-lg p-1 hover:bg-sidebar-accent" aria-label="Expand sidebar" title="Expand sidebar"><Logo compact /></button>
+        ) : <Link to="/" onClick={onNavigate}><Logo compact={collapsed} /></Link>}
         {onToggle && !collapsed && (
           <button onClick={onToggle} className="rounded-md p-1.5 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground" aria-label="Collapse sidebar"><ChevronsLeft className="size-4" /></button>
         )}
