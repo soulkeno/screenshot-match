@@ -148,7 +148,7 @@ export async function playInstant(userId: string, game: string, wagerIn: number,
       const rows = [8, 12, 16].includes(Number(p.rows)) ? Number(p.rows) : 16;
       const risk: L.PlinkoRisk = ["low", "medium", "high"].includes(p.risk) ? p.risk : "medium";
       const path = L.plinkoPath(await f(rows), rows);
-      const bucket = path.reduce((a, b) => a + b, 0);
+      const bucket = path.reduce<number>((a, b) => a + b, 0);
       const mult = L.PLINKO[rows][risk][bucket];
       payout = L.floor2(wager * mult);
       result = { rows, risk, path, bucket, multiplier: mult };

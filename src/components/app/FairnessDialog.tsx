@@ -112,7 +112,7 @@ function Verifier({ prev }: { prev: F["prev"] }) {
     if (game === "limbo" || game === "crash") r = `Result: ${L.limboResult((await f(1))[0]).toFixed(2)}×`;
     if (game === "coinflip") r = `Result: ${L.coinResult((await f(1))[0])}`;
     if (game === "roulette") r = `Number: ${L.rouletteNumber((await f(1))[0])}`;
-    if (game === "plinko") { const rows = Number(extra) || 16; const p = L.plinkoPath(await f(rows), rows); r = `Path: ${p.map((x) => (x ? "R" : "L")).join("")} → slot ${p.reduce((a, b) => a + b, 0)}`; }
+    if (game === "plinko") { const rows = Number(extra) || 16; const p = L.plinkoPath(await f(rows), rows); r = `Path: ${p.map((x) => (x ? "R" : "L")).join("")} → slot ${p.reduce<number>((a, b) => a + b, 0)}`; }
     if (game === "keno") r = `Drawn: ${L.kenoDraw(await f(10)).join(", ")}`;
     if (game === "mines") { const m = Number(extra) || 3; r = `Mines at tiles: ${L.minesPositions(await f(m), m).map((x) => x + 1).sort((a, b) => a - b).join(", ")}`; }
     if (game === "slots") { const s = L.slotSpin(await f(15)); r = `Pays ${s.mult}× · Reels: ${s.grid.map((c) => c.join("/")).join(" | ")}`; }

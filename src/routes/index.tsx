@@ -1,23 +1,57 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Flame, Swords, Cherry, Crown, Gift, Percent } from "lucide-react";
+import { GAMES } from "@/lib/games/registry";
+import { GameGrid } from "@/components/app/GameTile";
+import { LiveBets } from "@/components/app/LiveBets";
+import { SectionTitle } from "@/components/common/bits";
+import { useApp } from "@/lib/app-context";
+import promoVip from "@/assets/promo-vip.jpg";
+import promoDaily from "@/assets/promo-daily.jpg";
+import promoRake from "@/assets/promo-rakeback.jpg";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Ember Casino — Play 20 provably fair games" },
+      { name: "description", content: "Mines, Crash, Blackjack, PvP duels, slots and more. Free coins, daily rewards and rakeback." },
+      { property: "og:title", content: "Ember Casino — Play 20 provably fair games" },
+      { property: "og:description", content: "Mines, Crash, Blackjack, PvP duels, slots and more on Ember." },
+    ],
+  }),
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const PROMOS = [
+  { to: "/vip", img: promoVip, title: "VIP Club", text: "Double daily rewards, double rakeback & custom cosmetics", icon: Crown },
+  { to: "/rewards", img: promoDaily, title: "Daily Rewards", text: "Claim free coins every 24 hours — more as you rank up", icon: Gift },
+  { to: "/rakeback", img: promoRake, title: "Rakeback", text: "Get a cut of every bet back, win or lose", icon: Percent },
+] as const;
+
+function Home() {
+  const { profile } = useApp();
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="animate-fade-up">
+      <div className="mb-6">
+        <h1 className="font-display text-4xl tracking-wide md:text-5xl">Welcome back{profile ? `, ${profile.username}` : ""}</h1>
+        <p className="text-sm text-muted-foreground">Pick a game and good luck.</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {PROMOS.map((p) => (
+          <Link key={p.to} to={p.to} className="group relative h-44 overflow-hidden rounded-2xl border border-border shadow-card">
+            <img src={p.img} alt="" className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+            <div className="relative flex h-full max-w-[70%] flex-col justify-end p-5">
+              <p.icon className="mb-2 size-6 text-primary" />
+              <p className="font-display text-3xl leading-none tracking-wide">{p.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{p.text}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+      <section className="mt-8"><SectionTitle icon={Flame}>Ember Originals</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "originals")} /></section>
+      <section className="mt-8"><SectionTitle icon={Swords}>Player vs Player</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "pvp")} /></section>
+      <section className="mt-8"><SectionTitle icon={Cherry}>Slots</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "slots")} /></section>
+      <LiveBets />
     </div>
   );
 }
