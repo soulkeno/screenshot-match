@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Ban, Crown, Loader2, Minus, Plus, Search, ShieldCheck, Ticket, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { adminWipeUserFn } from "@/lib/games.functions";
 import { Amount, PageHeader, RankTag, UserAvatar, VipTag } from "@/components/common/bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +78,7 @@ function UsersTab() {
 
 function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
   const { userId } = useApp();
+  const wipeUser = useServerFn(adminWipeUserFn);
   const [p, setP] = useState<P | null>(null);
   const [bal, setBal] = useState<number | null>(null);
   const [admin, setAdmin] = useState(false);
@@ -149,11 +152,11 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
       </Section>
       <Section title="Wipe">
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-muted-foreground mb-2">
-          Wipes coins balance to 0 and resets all stats (wagered, bets, wins, etc.). This cannot be undone.
+          Wipes coins balance to 0, resets vault & rakeback, and resets all stats (wagered, bets, wins, etc.). This cannot be undone.
         </div>
         <Button
           variant="destructive"
-          disabled={!!busy || p.id === userId}
+          disabled={!!busy}
           onClick={() => setConfirmWipe(true)}
         >
           <Trash2 /> Wipe Player
@@ -170,7 +173,7 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Wipe {p.username}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will zero their coin balance and reset all their stats (wagered, bets, wins, rank progress). This cannot be undone.
+              This will zero their coin balance, empty their vault & rakeback, and reset all stats (wagered, bets, wins, rank progress). This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -179,26 +182,17 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
                 setBusy("wipe");
-                // Zero balance
-                if (bal && bal > 0) {
-                  await supabase.rpc("admin_adjust_balance", { p_user: id, p_delta: -bal });
+                try {
+                  await wipeUser({ data: { targetUserId: id } });
+                  setConfirmWipe(false);
+                  toast.success(`${p.username} wiped successfully`);
+                  await load();
+                  onChanged();
+                } catch (err) {
+                  toast.error(errMsg(err));
+                } finally {
+                  setBusy(null);
                 }
-                // Reset wallet vault and rakeback
-                await supabase
-                  .from("wallets")
-                  .update({ vault: 0, rakeback: 0 })
-                  .eq("user_id", id);
-                // Reset stats
-                const { error } = await supabase
-                  .from("profiles")
-                  .update({ total_wagered: 0, total_payout: 0, bets_count: 0, wins_count: 0, biggest_win: 0, biggest_multiplier: 0 })
-                  .eq("id", id);
-                setBusy(null);
-                setConfirmWipe(false);
-                if (error) return toast.error(errMsg(error));
-                toast.success(`${p.username} wiped successfully`);
-                await load();
-                onChanged();
               }}
             >
               Wipe Player

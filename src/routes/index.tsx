@@ -49,7 +49,7 @@ function Home() {
           </Link>
         ))}
       </div>
-      <section className="mt-8"><SectionTitle icon={Flame}>Keno Originals</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "originals")} /></section>
+      <section className="mt-8"><SectionTitle icon={Flame}>Keno Originals</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "originals" && g.slug !== "baccarat")} /></section>
       <section className="mt-8"><SectionTitle icon={Swords}>Player vs Player</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "pvp")} /></section>
       <section className="mt-8"><SectionTitle icon={Cherry}>Slots</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "slots")} /></section>
       <LiveBets />

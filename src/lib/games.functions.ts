@@ -98,3 +98,11 @@ export const changeUsernameFn = createServerFn({ method: "POST" })
     const E = await import("./engine.server");
     return E.changeUsername(context.userId, data.username);
   });
+
+export const adminWipeUserFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { targetUserId: string }) => d)
+  .handler(async ({ data, context }): Promise<any> => {
+    const E = await import("./engine.server");
+    return E.adminWipeUser(context.userId, data.targetUserId);
+  });

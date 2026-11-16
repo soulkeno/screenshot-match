@@ -1,14 +1,145 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, Search, Settings, MessageSquare, Vault, Loader2 } from "lucide-react";
+import { Menu, Search, Settings, MessageSquare, Vault, Loader2, Gamepad2, ChevronDown, ChevronRight, Star, History, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/lib/app-context";
 import { GAMES } from "@/lib/games/registry";
 import { Amount, RankIcon, UserAvatar } from "@/components/common/bits";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type P = { id: string; username: string; avatar_url: string | null; total_wagered: number };
+
+function GamesMenu() {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const originals = GAMES.filter((g) => g.category === "originals" && g.slug !== "baccarat");
+  const cases = GAMES.filter((g) => g.slug === "cases" || g.slug === "case-battles");
+  const pvpAndMore = GAMES.filter((g) => g.slug === "pvp-coinflip" || g.slug === "mines-duel" || g.slug === "slots");
+
+  const selectGame = (slug: string) => {
+    setOpen(false);
+    navigate({ to: "/play/$slug", params: { slug } });
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-bold transition-all hover:bg-surface-2 hover:border-primary/50 shrink-0",
+            open ? "border-primary/60 bg-surface-2 text-primary shadow-sm" : "text-foreground"
+          )}
+        >
+          <Gamepad2 className="size-4 text-primary" />
+          <span>Games</span>
+          <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform duration-200", open && "rotate-180")} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        className="w-[360px] sm:w-[420px] max-h-[82vh] overflow-y-auto p-4 border-border bg-popover/95 backdrop-blur-xl shadow-2xl rounded-2xl animate-fade-up no-scrollbar z-50"
+      >
+        {/* Quick Nav Bar */}
+        <div className="grid grid-cols-3 gap-1.5 pb-3 border-b border-border/60">
+          <Link
+            to="/favourites"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-surface px-2 py-2 text-xs font-semibold text-foreground/90 transition hover:bg-surface-2 hover:text-gold"
+          >
+            <Star className="size-3.5 text-gold fill-current" /> Favorites
+          </Link>
+          <Link
+            to="/recent"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-surface px-2 py-2 text-xs font-semibold text-foreground/90 transition hover:bg-surface-2 hover:text-accent"
+          >
+            <History className="size-3.5 text-accent" /> Recent
+          </Link>
+          <Link
+            to="/leaderboard"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-surface px-2 py-2 text-xs font-semibold text-foreground/90 transition hover:bg-surface-2 hover:text-primary"
+          >
+            <Trophy className="size-3.5 text-primary" /> Leaderboard
+          </Link>
+        </div>
+
+        {/* ORIGINALS */}
+        <div className="pt-3">
+          <p className="px-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Originals</p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {originals.map((g) => (
+              <button
+                key={g.slug}
+                onClick={() => selectGame(g.slug)}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition hover:bg-surface-2 group"
+              >
+                <span className={cn("grid size-6 place-items-center rounded-md shrink-0 transition-transform group-hover:scale-110", g.tone)}>
+                  <g.icon className="size-3.5" />
+                </span>
+                <span className="truncate group-hover:text-primary transition-colors">{g.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* CASES */}
+        <div className="mt-4 pt-3 border-t border-border/60">
+          <p className="px-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Cases</p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {cases.map((g) => (
+              <button
+                key={g.slug}
+                onClick={() => selectGame(g.slug)}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition hover:bg-surface-2 group"
+              >
+                <span className={cn("grid size-6 place-items-center rounded-md shrink-0 transition-transform group-hover:scale-110", g.tone)}>
+                  <g.icon className="size-3.5" />
+                </span>
+                <span className="truncate group-hover:text-primary transition-colors">{g.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* PVP & MORE */}
+        <div className="mt-4 pt-3 border-t border-border/60">
+          <p className="px-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">PvP & More</p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {pvpAndMore.map((g) => (
+              <button
+                key={g.slug}
+                onClick={() => selectGame(g.slug)}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition hover:bg-surface-2 group"
+              >
+                <span className={cn("grid size-6 place-items-center rounded-md shrink-0 transition-transform group-hover:scale-110", g.tone)}>
+                  <g.icon className="size-3.5" />
+                </span>
+                <span className="truncate group-hover:text-primary transition-colors">{g.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-4 pt-3 border-t border-border/60">
+          <Link
+            to="/"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 transition"
+          >
+            <span>All games</span>
+            <ChevronRight className="size-3.5" />
+          </Link>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
   const { profile, balance, chatOpen, setChatOpen, setSettingsOpen, openProfile } = useApp();
@@ -52,6 +183,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl">
       <button onClick={onMenu} className="rounded-lg p-2 text-muted-foreground hover:bg-surface-2 hover:text-foreground lg:hidden" aria-label="Open menu"><Menu className="size-5" /></button>
+      <GamesMenu />
 
       <div ref={box} className="relative hidden w-full max-w-xs md:block">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

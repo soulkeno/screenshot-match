@@ -210,6 +210,7 @@ async function getActive(userId: string, game: string): Promise<Session | null> 
   return (data as any) ?? null;
 }
 async function saveState(s: Session, status = "active") {
+  s.status = status;
   await db.from("game_sessions").update({ state: s.state, status, updated_at: new Date().toISOString() }).eq("id", s.id);
 }
 async function cursorFloat(s: Session, count: number) {
@@ -219,6 +220,7 @@ async function cursorFloat(s: Session, count: number) {
 }
 
 async function finish(s: Session, payout: number, status: "won" | "lost") {
+  s.status = status;
   s.state.payout = payout;
   s.state.ended = status;
   await saveState(s, status);
@@ -748,4 +750,29 @@ export async function changeUsername(userId: string, name: string) {
   const { error } = await db.from("profiles").update({ username: name }).eq("id", userId);
   if (error) fail("That username is taken");
   return { username: name };
+}
+
+// ---------------- Admin ----------------
+export async function adminWipeUser(callerId: string, targetUserId: string) {
+  const { data: roles } = await db.from("user_roles").select("role").eq("user_id", callerId).eq("role", "admin");
+  if (!roles || roles.length === 0) fail("Forbidden: Admin access required");
+
+  // Zero balance, vault, rakeback in wallets
+  await db.from("wallets").update({ balance: 0, vault: 0, rakeback: 0, updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
+
+  // Reset profile stats
+  const { error } = await db.from("profiles").update({
+    total_wagered: 0,
+    total_payout: 0,
+    bets_count: 0,
+    wins_count: 0,
+    biggest_win: 0,
+    biggest_multiplier: 0,
+  }).eq("id", targetUserId);
+
+  if (error) fail(error.message);
+
+  // Fetch updated wallet balance
+  const { data: w } = await db.from("wallets").select("balance").eq("user_id", targetUserId).maybeSingle();
+  return { ok: true, balance: Number(w?.balance ?? 0) };
 }

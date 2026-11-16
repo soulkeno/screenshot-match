@@ -68,9 +68,18 @@ export function useSession(game: string) {
 
   const action = useCallback(async (a: string, params: Record<string, any> = {}, quiet = false) => {
     setBusy(true);
-    try { return apply(await act({ data: { game, action: a, params } })); }
-    catch (e) { if (!quiet) toast.error(errMsg(e)); return null; }
-    finally { setBusy(false); }
+    try {
+      return apply(await act({ data: { game, action: a, params } }));
+    } catch (e) {
+      const msg = errMsg(e);
+      if (msg.toLowerCase().includes("no active game")) {
+        setSession(null);
+      }
+      if (!quiet) toast.error(msg);
+      return null;
+    } finally {
+      setBusy(false);
+    }
   }, [act, apply, game]);
 
   return { session, setSession, busy, begin, action, active: session?.status === "active" };

@@ -21,6 +21,9 @@ const GAME_COVERS: Record<string, string> = {
   snakes: "/games/snakes.jpg",
   rps: "/games/rps.jpg",
   "mines-duel": "/games/mines-duel.jpg",
+  keno: "/games/keno.jpg",
+  hilo: "/games/hilo.jpg",
+  "pvp-coinflip": "/games/pvp-coinflip.jpg",
 };
 
 export function GameTile({ g }: { g: GameMeta }) {
