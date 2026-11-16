@@ -62,14 +62,10 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
     return () => { alive = false; void supabase.removeChannel(ch); };
   }, [loadAvatars]);
 
-  // presence: online count
+  // presence: online count (one shared channel, however many chat panels are mounted)
   useEffect(() => {
     if (!userId) return;
-    const ch = supabase.channel("online-players", { config: { presence: { key: userId } } });
-    ch.on("presence", { event: "sync" }, () => setOnline(Object.keys(ch.presenceState()).length || 1)).subscribe((s) => {
-      if (s === "SUBSCRIBED") void ch.track({ at: Date.now() });
-    });
-    return () => { void supabase.removeChannel(ch); };
+    return subscribeOnline(userId, setOnline);
   }, [userId]);
 
   useLayoutEffect(() => {
@@ -283,4 +279,33 @@ function StartRainDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
       </DialogContent>
     </Dialog>
   );
+}
+
+type OnlineCh = ReturnType<typeof supabase.channel>;
+let onlineCh: OnlineCh | null = null;
+const onlineListeners = new Set<(n: number) => void>();
+let onlineCount = 1;
+function subscribeOnline(userId: string, cb: (n: number) => void) {
+  onlineListeners.add(cb);
+  cb(onlineCount);
+  if (!onlineCh) {
+    const ch = supabase.channel(`online-players`, { config: { presence: { key: userId } } });
+    onlineCh = ch;
+    try {
+      ch.on("presence", { event: "sync" }, () => {
+        onlineCount = Object.keys(ch.presenceState()).length || 1;
+        onlineListeners.forEach((f) => f(onlineCount));
+      }).subscribe((s) => { if (s === "SUBSCRIBED") void ch.track({ at: Date.now() }); });
+    } catch {
+      /* channel already joined elsewhere; keep the last known count */
+    }
+  }
+  return () => {
+    onlineListeners.delete(cb);
+    if (onlineListeners.size === 0 && onlineCh) {
+      const ch = onlineCh;
+      onlineCh = null;
+      setTimeout(() => { if (!onlineCh) void supabase.removeChannel(ch); }, 0);
+    }
+  };
 }

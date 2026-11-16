@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- tsconfig keeps `strict` but disables `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` and `noImplicitReturns`: game math indexes fixed tables heavily and effects return cleanups conditionally.
+- Realtime presence uses one shared module-level channel (see ChatPanel `subscribeOnline`): supabase-js reuses channels by topic, and adding listeners to an already-joined channel throws and crashes every page.
+- Game screens map slug → component in `src/routes/play.$slug.tsx`; PvP screens live in `src/components/pvp/` and share `usePvp`.

@@ -10,11 +10,65 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as FavouritesRouteImport } from './routes/favourites'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as RakebackRouteImport } from './routes/rakeback'
+import { Route as RecentRouteImport } from './routes/recent'
+import { Route as RewardsRouteImport } from './routes/rewards'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as VaultRouteImport } from './routes/vault'
+import { Route as VipRouteImport } from './routes/vip'
 import { Route as PlaySlugRouteImport } from './routes/play.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavouritesRoute = FavouritesRouteImport.update({
+  id: '/favourites',
+  path: '/favourites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RakebackRoute = RakebackRouteImport.update({
+  id: '/rakeback',
+  path: '/rakeback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecentRoute = RecentRouteImport.update({
+  id: '/recent',
+  path: '/recent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VaultRoute = VaultRouteImport.update({
+  id: '/vault',
+  path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VipRoute = VipRouteImport.update({
+  id: '/vip',
+  path: '/vip',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlaySlugRoute = PlaySlugRouteImport.update({
@@ -25,27 +79,97 @@ const PlaySlugRoute = PlaySlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/favourites': typeof FavouritesRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/rakeback': typeof RakebackRoute
+  '/recent': typeof RecentRoute
+  '/rewards': typeof RewardsRoute
+  '/stats': typeof StatsRoute
+  '/vault': typeof VaultRoute
+  '/vip': typeof VipRoute
   '/play/$slug': typeof PlaySlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/favourites': typeof FavouritesRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/rakeback': typeof RakebackRoute
+  '/recent': typeof RecentRoute
+  '/rewards': typeof RewardsRoute
+  '/stats': typeof StatsRoute
+  '/vault': typeof VaultRoute
+  '/vip': typeof VipRoute
   '/play/$slug': typeof PlaySlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/favourites': typeof FavouritesRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/rakeback': typeof RakebackRoute
+  '/recent': typeof RecentRoute
+  '/rewards': typeof RewardsRoute
+  '/stats': typeof StatsRoute
+  '/vault': typeof VaultRoute
+  '/vip': typeof VipRoute
   '/play/$slug': typeof PlaySlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/play/$slug'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/favourites'
+    | '/leaderboard'
+    | '/rakeback'
+    | '/recent'
+    | '/rewards'
+    | '/stats'
+    | '/vault'
+    | '/vip'
+    | '/play/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/play/$slug'
-  id: '__root__' | '/' | '/play/$slug'
+  to:
+    | '/'
+    | '/admin'
+    | '/favourites'
+    | '/leaderboard'
+    | '/rakeback'
+    | '/recent'
+    | '/rewards'
+    | '/stats'
+    | '/vault'
+    | '/vip'
+    | '/play/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/favourites'
+    | '/leaderboard'
+    | '/rakeback'
+    | '/recent'
+    | '/rewards'
+    | '/stats'
+    | '/vault'
+    | '/vip'
+    | '/play/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  FavouritesRoute: typeof FavouritesRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  RakebackRoute: typeof RakebackRoute
+  RecentRoute: typeof RecentRoute
+  RewardsRoute: typeof RewardsRoute
+  StatsRoute: typeof StatsRoute
+  VaultRoute: typeof VaultRoute
+  VipRoute: typeof VipRoute
   PlaySlugRoute: typeof PlaySlugRoute
 }
 
@@ -56,6 +180,69 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favourites': {
+      id: '/favourites'
+      path: '/favourites'
+      fullPath: '/favourites'
+      preLoaderRoute: typeof FavouritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rakeback': {
+      id: '/rakeback'
+      path: '/rakeback'
+      fullPath: '/rakeback'
+      preLoaderRoute: typeof RakebackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recent': {
+      id: '/recent'
+      path: '/recent'
+      fullPath: '/recent'
+      preLoaderRoute: typeof RecentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vault': {
+      id: '/vault'
+      path: '/vault'
+      fullPath: '/vault'
+      preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vip': {
+      id: '/vip'
+      path: '/vip'
+      fullPath: '/vip'
+      preLoaderRoute: typeof VipRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/play/$slug': {
@@ -70,6 +257,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  FavouritesRoute: FavouritesRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  RakebackRoute: RakebackRoute,
+  RecentRoute: RecentRoute,
+  RewardsRoute: RewardsRoute,
+  StatsRoute: StatsRoute,
+  VaultRoute: VaultRoute,
+  VipRoute: VipRoute,
   PlaySlugRoute: PlaySlugRoute,
 }
 export const routeTree = rootRouteImport
