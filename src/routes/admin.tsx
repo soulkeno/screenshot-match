@@ -84,6 +84,7 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
   const [until, setUntil] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmAdmin, setConfirmAdmin] = useState(false);
+  const [confirmWipe, setConfirmWipe] = useState(false);
 
   const load = useCallback(async () => {
     const [a, b, c] = await Promise.all([
@@ -146,10 +147,58 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
         {admin ? <Button variant="surface" disabled={!!busy || p.id === userId} onClick={() => act("unadmin", () => supabase.rpc("admin_set_admin", { p_user: id, p_admin: false }), "Admin removed")}>Remove admin</Button>
           : <Button variant="surface" disabled={!!busy} onClick={() => setConfirmAdmin(true)}><ShieldCheck />Give admin</Button>}
       </Section>
+      <Section title="Wipe">
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-muted-foreground mb-2">
+          Wipes coins balance to 0 and resets all stats (wagered, bets, wins, etc.). This cannot be undone.
+        </div>
+        <Button
+          variant="destructive"
+          disabled={!!busy || p.id === userId}
+          onClick={() => setConfirmWipe(true)}
+        >
+          <Trash2 /> Wipe Player
+        </Button>
+      </Section>
       <AlertDialog open={confirmAdmin} onOpenChange={setConfirmAdmin}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>{p.username} will get full access to the Admin Panel, including coins, bans and codes.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => act("admin", () => supabase.rpc("admin_set_admin", { p_user: id, p_admin: true }), "Admin given")}>Give admin</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={confirmWipe} onOpenChange={setConfirmWipe}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Wipe {p.username}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will zero their coin balance and reset all their stats (wagered, bets, wins, rank progress). This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                setBusy("wipe");
+                // Zero balance
+                if (bal && bal > 0) {
+                  await supabase.rpc("admin_adjust_balance", { p_user: id, p_delta: -bal });
+                }
+                // Reset stats
+                const { error } = await supabase
+                  .from("profiles")
+                  .update({ total_wagered: 0, total_payout: 0, bets_count: 0, wins_count: 0, biggest_win: 0, biggest_multiplier: 0 })
+                  .eq("id", id);
+                setBusy(null);
+                setConfirmWipe(false);
+                if (error) return toast.error(errMsg(error));
+                toast.success(`${p.username} wiped successfully`);
+                await load();
+                onChanged();
+              }}
+            >
+              Wipe Player
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
