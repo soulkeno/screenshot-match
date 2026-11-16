@@ -22,7 +22,7 @@ export function GameTile({ g }: { g: GameMeta }) {
             background: 'radial-gradient(ellipse 20px 8px at 15% 100%, white 50%, transparent 51%), radial-gradient(ellipse 18px 7px at 40% 100%, white 50%, transparent 51%), radial-gradient(ellipse 22px 9px at 65% 100%, white 50%, transparent 51%), radial-gradient(ellipse 16px 7px at 85% 100%, white 50%, transparent 51%)',
           }} />
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/70">{g.category === "pvp" ? "PvP" : g.category === "slots" ? "Slots" : "Ember Original"}</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/70">{g.category === "pvp" ? "PvP" : g.category === "slots" ? "Slots" : "Keno Original"}</span>
         <g.icon className="mx-auto size-14 text-foreground drop-shadow-lg transition-transform duration-300 group-hover:scale-110" strokeWidth={1.6} />
         <div>
           <p className="font-display text-2xl leading-none tracking-wide text-foreground">{g.name}</p>

@@ -5,17 +5,17 @@ import { GameGrid } from "@/components/app/GameTile";
 import { LiveBets } from "@/components/app/LiveBets";
 import { SectionTitle } from "@/components/common/bits";
 import { useApp } from "@/lib/app-context";
-import promoVip from "@/assets/promo-vip.jpg";
-import promoDaily from "@/assets/promo-daily.jpg";
-import promoRake from "@/assets/promo-rakeback.jpg";
+const promoVip = "/vip-club-icon.png";
+const promoDaily = "/daily-rewards-icon.jpg";
+const promoRake = "/rakeback-icon.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Ember Casino — Play 20 provably fair games" },
+      { title: "Keno — Play 20 provably fair games" },
       { name: "description", content: "Mines, Crash, Blackjack, PvP duels, slots and more. Free coins, daily rewards and rakeback." },
-      { property: "og:title", content: "Ember Casino — Play 20 provably fair games" },
-      { property: "og:description", content: "Mines, Crash, Blackjack, PvP duels, slots and more on Ember." },
+      { property: "og:title", content: "Keno — Play 20 provably fair games" },
+      { property: "og:description", content: "Mines, Crash, Blackjack, PvP duels, slots and more on Keno." },
     ],
   }),
   component: Home,
@@ -48,7 +48,7 @@ function Home() {
           </Link>
         ))}
       </div>
-      <section className="mt-8"><SectionTitle icon={Flame}>Ember Originals</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "originals")} /></section>
+      <section className="mt-8"><SectionTitle icon={Flame}>Keno Originals</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "originals")} /></section>
       <section className="mt-8"><SectionTitle icon={Swords}>Player vs Player</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "pvp")} /></section>
       <section className="mt-8"><SectionTitle icon={Cherry}>Slots</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "slots")} /></section>
       <LiveBets />

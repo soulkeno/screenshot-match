@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
   validateSearch: (s: Record<string, unknown>): { user?: string } => (typeof s["user"] === "string" ? { user: s["user"] } : {}),
-  head: () => ({ meta: [{ title: "Admin Panel — Ember Casino" }, { name: "description", content: "Ember staff tools." }, { property: "og:title", content: "Admin Panel — Ember Casino" }, { property: "og:description", content: "Ember staff tools." }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin Panel — Keno Casino" }, { name: "description", content: "Keno staff tools." }, { property: "og:title", content: "Admin Panel — Keno Casino" }, { property: "og:description", content: "Keno staff tools." }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });
 

@@ -1,4 +1,3 @@
-import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getRank } from "@/lib/ranks";
 import { fmt, fmtCompact } from "@/lib/format";
@@ -6,10 +5,8 @@ import { fmt, fmtCompact } from "@/lib/format";
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2 select-none">
-      <div className="grid size-8 place-items-center rounded-lg bg-gradient-primary shadow-glow">
-        <Flame className="size-5 text-primary-foreground" strokeWidth={2.5} />
-      </div>
-      {!compact && <span className="font-display text-2xl leading-none tracking-wider">EMBER</span>}
+      <img src="/logo-keno.png" alt="Keno" className="size-8 object-contain" />
+      {!compact && <span className="font-display text-2xl leading-none tracking-wider">KENO</span>}
     </div>
   );
 }
@@ -47,7 +44,12 @@ export function RankTag({ wagered, className }: { wagered: number | string | nul
 }
 
 export function VipTag() {
-  return <span className="rounded-md bg-gradient-gold px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary-foreground">VIP</span>;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-gradient-gold px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary-foreground">
+      <img src="/vip-badge.jpg" alt="VIP" className="size-4 rounded object-cover" />
+      VIP
+    </span>
+  );
 }
 
 export function Coin({ className }: { className?: string }) {
