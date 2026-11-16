@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 import type { GameMeta } from "@/lib/games/registry";
 import { useApp } from "@/lib/app-context";
+import { SnowCap } from "@/components/common/bits";
 import { cn } from "@/lib/utils";
 
 export function GameTile({ g }: { g: GameMeta }) {
@@ -11,17 +12,7 @@ export function GameTile({ g }: { g: GameMeta }) {
     <div className="group relative">
       <Link to="/play/$slug" params={{ slug: g.slug }}
         className={cn("relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-xl border border-border p-3 shadow-card transition-all duration-200 group-hover:-translate-y-1 group-hover:border-primary/50", g.tone)}>
-        {/* Christmas snow cap */}
-        <div className="absolute top-0 left-0 right-0 h-6 pointer-events-none overflow-hidden rounded-t-xl">
-          <div className="absolute inset-0 opacity-80" style={{
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 60%, transparent 100%)',
-            borderRadius: '4px 4px 50% 50%',
-          }} />
-          {/* small snow bumps */}
-          <div className="absolute bottom-0 left-0 right-0 h-3 opacity-60" style={{
-            background: 'radial-gradient(ellipse 20px 8px at 15% 100%, white 50%, transparent 51%), radial-gradient(ellipse 18px 7px at 40% 100%, white 50%, transparent 51%), radial-gradient(ellipse 22px 9px at 65% 100%, white 50%, transparent 51%), radial-gradient(ellipse 16px 7px at 85% 100%, white 50%, transparent 51%)',
-          }} />
-        </div>
+        <SnowCap />
         <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/70">{g.category === "pvp" ? "PvP" : g.category === "slots" ? "Slots" : "Keno Original"}</span>
         <g.icon className="mx-auto size-14 text-foreground drop-shadow-lg transition-transform duration-300 group-hover:scale-110" strokeWidth={1.6} />
         <div>

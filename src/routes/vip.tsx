@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Crown, Gift, Percent, Sparkles, Rocket, Check } from "lucide-react";
+import { Gift, Percent, Sparkles, Rocket, Check } from "lucide-react";
 import { PageHeader } from "@/components/common/bits";
 import { useApp } from "@/lib/app-context";
-import promoVip from "@/assets/promo-vip.jpg";
+const promoVip = "/vip-club-icon.png";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/vip")({
-  head: () => ({ meta: [{ title: "VIP Club — Ember Casino" }, { name: "description", content: "Ember VIP perks: boosted daily rewards, boosted rakeback and custom cosmetics." }, { property: "og:title", content: "VIP Club — Ember Casino" }, { property: "og:description", content: "Ember VIP perks: boosted daily rewards, boosted rakeback and custom cosmetics." }] }),
+  head: () => ({ meta: [{ title: "VIP Club — Keno Casino" }, { name: "description", content: "Keno VIP perks: boosted daily rewards, boosted rakeback and custom cosmetics." }, { property: "og:title", content: "VIP Club — Keno Casino" }, { property: "og:description", content: "Keno VIP perks: boosted daily rewards, boosted rakeback and custom cosmetics." }] }),
   component: Page,
 });
 
@@ -17,12 +17,16 @@ const PERKS = [
   { icon: Rocket, t: "More to come", d: "New perks arrive with future updates." },
 ];
 
+function VipIconHeader() {
+  return <img src="/vip-club-icon.png" alt="VIP" className="size-7 object-contain" />;
+}
+
 function Page() {
   const { profile } = useApp();
   const vip = !!profile?.is_vip;
   return (
     <div className="animate-fade-up">
-      <PageHeader icon={Crown} title="VIP Club" subtitle="VIP is awarded by the Ember team — it can't be bought." />
+      <PageHeader icon={VipIconHeader} title="VIP Club" subtitle="VIP is awarded by the Keno team — it can't be bought." />
       <div className="relative h-56 overflow-hidden rounded-2xl border border-border shadow-card">
         <img src={promoVip} alt="" className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />

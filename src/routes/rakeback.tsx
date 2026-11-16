@@ -11,7 +11,7 @@ import { errMsg, fmt } from "@/lib/format";
 import { sfx } from "@/lib/sound";
 
 export const Route = createFileRoute("/rakeback")({
-  head: () => ({ meta: [{ title: "Rakeback — Ember Casino" }, { name: "description", content: "Earn a share of every bet back on Ember Casino, win or lose." }, { property: "og:title", content: "Rakeback — Ember Casino" }, { property: "og:description", content: "Earn a share of every bet back on Ember Casino, win or lose." }] }),
+  head: () => ({ meta: [{ title: "Rakeback — Keno Casino" }, { name: "description", content: "Earn a share of every bet back on Keno Casino, win or lose." }, { property: "og:title", content: "Rakeback — Keno Casino" }, { property: "og:description", content: "Earn a share of every bet back on Keno Casino, win or lose." }] }),
   component: Page,
 });
 

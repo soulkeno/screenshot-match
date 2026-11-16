@@ -43,9 +43,19 @@ export function RankTag({ wagered, className }: { wagered: number | string | nul
   );
 }
 
+export function SnowCap({ className }: { className?: string }) {
+  return (
+    <div className={cn("pointer-events-none absolute -top-0.5 left-0 right-0 z-10 overflow-hidden leading-none", className)}>
+      <svg viewBox="0 0 100 16" preserveAspectRatio="none" className="h-4 w-full fill-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]">
+        <path d="M0,0 L100,0 L100,5 Q92,12 84,5 Q76,14 68,6 Q60,15 50,6 Q40,14 30,5 Q20,13 12,6 Q6,11 0,4 Z" />
+      </svg>
+    </div>
+  );
+}
+
 export function VipTag() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-gradient-gold px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary-foreground">
+    <span className="inline-flex items-center gap-1 rounded-md bg-gradient-gold px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary-foreground shadow-sm">
       <img src="/vip-badge.jpg" alt="VIP" className="size-4 rounded object-cover" />
       VIP
     </span>

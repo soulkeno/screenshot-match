@@ -36,8 +36,8 @@ export const Route = createFileRoute("/play/$slug")({
   },
   head: ({ loaderData }) => {
     const name = loaderData ? GAME_BY_SLUG[loaderData.slug]?.name : undefined;
-    const title = name ? `${name} — Ember Casino` : "Game — Ember Casino";
-    const desc = name ? `Play ${name} on Ember Casino. ${GAME_BY_SLUG[loaderData!.slug]?.blurb}.` : "Play on Ember Casino.";
+    const title = name ? `${name} — Keno Casino` : "Game — Keno Casino";
+    const desc = name ? `Play ${name} on Keno Casino. ${GAME_BY_SLUG[loaderData!.slug]?.blurb}.` : "Play on Keno Casino.";
     return { meta: [{ title }, { name: "description", content: desc }, { property: "og:title", content: title }, { property: "og:description", content: desc }] };
   },
   component: Play,

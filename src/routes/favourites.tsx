@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useApp } from "@/lib/app-context";
 
 export const Route = createFileRoute("/favourites")({
-  head: () => ({ meta: [{ title: "Favourites — Ember Casino" }, { name: "description", content: "Your favourite games on Ember Casino." }, { property: "og:title", content: "Favourites — Ember Casino" }, { property: "og:description", content: "Your favourite games on Ember Casino." }] }),
+  head: () => ({ meta: [{ title: "Favourites — Keno Casino" }, { name: "description", content: "Your favourite games on Keno Casino." }, { property: "og:title", content: "Favourites — Keno Casino" }, { property: "og:description", content: "Your favourite games on Keno Casino." }] }),
   component: Page,
 });
 

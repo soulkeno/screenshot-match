@@ -84,9 +84,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ember Casino" },
-      { name: "description", content: "Ember is a free-to-play casino with 20 provably fair games, live chat, rains and ranks." },
-      { property: "og:title", content: "Ember Casino" },
+      { title: "Keno Casino" },
+      { name: "description", content: "Keno is a free-to-play casino with 20 provably fair games, live chat, rains and ranks." },
+      { property: "og:title", content: "Keno Casino" },
       { property: "og:description", content: "Free-to-play casino with 20 provably fair games, live chat, rains and ranks." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

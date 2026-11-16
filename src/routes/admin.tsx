@@ -183,6 +183,11 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
                 if (bal && bal > 0) {
                   await supabase.rpc("admin_adjust_balance", { p_user: id, p_delta: -bal });
                 }
+                // Reset wallet vault and rakeback
+                await supabase
+                  .from("wallets")
+                  .update({ vault: 0, rakeback: 0 })
+                  .eq("user_id", id);
                 // Reset stats
                 const { error } = await supabase
                   .from("profiles")

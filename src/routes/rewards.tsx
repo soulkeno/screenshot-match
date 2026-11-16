@@ -12,7 +12,7 @@ import { sfx } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/rewards")({
-  head: () => ({ meta: [{ title: "Daily Rewards — Ember Casino" }, { name: "description", content: "Claim free coins every 24 hours on Ember Casino. Higher ranks and VIP earn more." }, { property: "og:title", content: "Daily Rewards — Ember Casino" }, { property: "og:description", content: "Claim free coins every 24 hours on Ember Casino. Higher ranks and VIP earn more." }] }),
+  head: () => ({ meta: [{ title: "Daily Rewards — Keno Casino" }, { name: "description", content: "Claim free coins every 24 hours on Keno Casino. Higher ranks and VIP earn more." }, { property: "og:title", content: "Daily Rewards — Keno Casino" }, { property: "og:description", content: "Claim free coins every 24 hours on Keno Casino. Higher ranks and VIP earn more." }] }),
   component: Page,
 });
 

@@ -91,7 +91,7 @@ export default function Slots() {
       </>
     }>
       <div className="flex h-full flex-col items-center justify-center gap-6 p-4 md:p-8" style={{ background: "radial-gradient(80% 60% at 50% 0%, color-mix(in oklab, var(--primary) 18%, transparent), transparent)" }}>
-        <h3 className="font-display text-5xl tracking-wider text-gradient-primary">EMBER SLOTS</h3>
+        <h3 className="font-display text-5xl tracking-wider text-gradient-primary">KENO SLOTS</h3>
         <div className="grid w-full max-w-[600px] grid-cols-5 gap-2 rounded-3xl border-4 border-primary/40 bg-background p-3 shadow-glow">
           {grid.map((col, reel) => (
             <div key={reel} className={cn("space-y-2", spinningReels[reel] && "blur-[1.5px]")}>

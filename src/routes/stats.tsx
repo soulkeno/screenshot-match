@@ -11,7 +11,7 @@ import { fmtCompact, fmtInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/stats")({
-  head: () => ({ meta: [{ title: "Profile Stats — Ember Casino" }, { name: "description", content: "Your rank, wagered total, wins and bet history on Ember Casino." }, { property: "og:title", content: "Profile Stats — Ember Casino" }, { property: "og:description", content: "Your rank, wagered total, wins and bet history on Ember Casino." }] }),
+  head: () => ({ meta: [{ title: "Profile Stats — Keno Casino" }, { name: "description", content: "Your rank, wagered total, wins and bet history on Keno Casino." }, { property: "og:title", content: "Profile Stats — Keno Casino" }, { property: "og:description", content: "Your rank, wagered total, wins and bet history on Keno Casino." }] }),
   component: Page,
 });
 

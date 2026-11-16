@@ -8,7 +8,7 @@ import { useApp } from "@/lib/app-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/leaderboard")({
-  head: () => ({ meta: [{ title: "Leaderboard — Ember Casino" }, { name: "description", content: "Top real players on Ember Casino by wagered, biggest win and multiplier." }, { property: "og:title", content: "Leaderboard — Ember Casino" }, { property: "og:description", content: "Top real players on Ember Casino by wagered, biggest win and multiplier." }] }),
+  head: () => ({ meta: [{ title: "Leaderboard — Keno Casino" }, { name: "description", content: "Top real players on Keno Casino by wagered, biggest win and multiplier." }, { property: "og:title", content: "Leaderboard — Keno Casino" }, { property: "og:description", content: "Top real players on Keno Casino by wagered, biggest win and multiplier." }] }),
   component: Page,
 });
 

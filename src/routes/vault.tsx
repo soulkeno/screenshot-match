@@ -11,7 +11,7 @@ import { errMsg, timeLeft } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/vault")({
-  head: () => ({ meta: [{ title: "Vault — Ember Casino" }, { name: "description", content: "Store coins safely in your Ember vault and lock it for 24 hours." }, { property: "og:title", content: "Vault — Ember Casino" }, { property: "og:description", content: "Store coins safely in your Ember vault and lock it for 24 hours." }] }),
+  head: () => ({ meta: [{ title: "Vault — Keno Casino" }, { name: "description", content: "Store coins safely in your Keno vault and lock it for 24 hours." }, { property: "og:title", content: "Vault — Keno Casino" }, { property: "og:description", content: "Store coins safely in your Keno vault and lock it for 24 hours." }] }),
   component: Page,
 });
 

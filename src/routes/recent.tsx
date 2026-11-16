@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useApp } from "@/lib/app-context";
 
 export const Route = createFileRoute("/recent")({
-  head: () => ({ meta: [{ title: "Recently Played — Ember Casino" }, { name: "description", content: "Games you played recently on Ember Casino." }, { property: "og:title", content: "Recently Played — Ember Casino" }, { property: "og:description", content: "Games you played recently on Ember Casino." }] }),
+  head: () => ({ meta: [{ title: "Recently Played — Keno Casino" }, { name: "description", content: "Games you played recently on Keno Casino." }, { property: "og:title", content: "Recently Played — Keno Casino" }, { property: "og:description", content: "Games you played recently on Keno Casino." }] }),
   component: Page,
 });
 

@@ -16,20 +16,20 @@ function seededRandom(seed: number): number {
 
 export function SnowEffect() {
   const snowflakes = useMemo<Snowflake[]>(() => {
-    return Array.from({ length: 25 }, (_, i) => {
+    return Array.from({ length: 35 }, (_, i) => {
       const r1 = seededRandom(i * 3 + 1);
       const r2 = seededRandom(i * 3 + 2);
       const r3 = seededRandom(i * 3 + 3);
       const r4 = seededRandom(i * 7 + 4);
       const r5 = seededRandom(i * 11 + 5);
-      const sizePx = 6 + r1 * 8; // 6–14px
+      const sizePx = 3 + r1 * 8; // 3–11px
       return {
         id: i,
         left: `${r2 * 100}%`,
         size: `${sizePx}px`,
-        duration: 8 + r3 * 12, // 8–20s
+        duration: 7 + r3 * 10, // 7–17s
         delay: -(r4 * 20),     // -20s to 0s
-        opacity: 0.5 + r5 * 0.2, // 0.5–0.7
+        opacity: 0.35 + r5 * 0.45, // 0.35–0.8
       };
     });
   }, []);
@@ -38,20 +38,16 @@ export function SnowEffect() {
     <>
       <style>{`
         @keyframes snowfall {
-          0%   { transform: translateY(-10px) translateX(0px); opacity: 0; }
-          10%  { opacity: 0.7; }
-          90%  { opacity: 0.5; }
-          100% { transform: translateY(100vh) translateX(30px); opacity: 0; }
+          0%   { transform: translateY(-20px) translateX(0px); opacity: 0; }
+          15%  { opacity: 0.8; }
+          50%  { transform: translateY(50vh) translateX(15px); }
+          85%  { opacity: 0.6; }
+          100% { transform: translateY(105vh) translateX(-10px); opacity: 0; }
         }
       `}</style>
       <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 0,
-          pointerEvents: "none",
-          overflow: "hidden",
-        }}
+        className="pointer-events-none fixed inset-0 z-40 overflow-hidden"
+        aria-hidden="true"
       >
         {snowflakes.map((flake) => (
           <span
@@ -63,9 +59,10 @@ export function SnowEffect() {
               width: flake.size,
               height: flake.size,
               borderRadius: "50%",
-              background: "white",
+              background: "radial-gradient(circle, #ffffff 40%, rgba(255,255,255,0.4) 100%)",
+              boxShadow: "0 0 6px rgba(255,255,255,0.8)",
               opacity: flake.opacity,
-              animation: `snowfall ${flake.duration}s linear ${flake.delay}s infinite`,
+              animation: `snowfall ${flake.duration}s ease-in-out ${flake.delay}s infinite`,
             }}
           />
         ))}

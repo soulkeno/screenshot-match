@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Flame, Swords, Cherry, Crown, Gift, Percent } from "lucide-react";
+import { Flame, Swords, Cherry } from "lucide-react";
 import { GAMES } from "@/lib/games/registry";
 import { GameGrid } from "@/components/app/GameTile";
 import { LiveBets } from "@/components/app/LiveBets";
-import { SectionTitle } from "@/components/common/bits";
+import { SectionTitle, SnowCap } from "@/components/common/bits";
 import { useApp } from "@/lib/app-context";
 const promoVip = "/vip-club-icon.png";
 const promoDaily = "/daily-rewards-icon.jpg";
@@ -22,9 +22,9 @@ export const Route = createFileRoute("/")({
 });
 
 const PROMOS = [
-  { to: "/vip", img: promoVip, title: "VIP Club", text: "Double daily rewards, double rakeback & custom cosmetics", icon: Crown },
-  { to: "/rewards", img: promoDaily, title: "Daily Rewards", text: "Claim free coins every 24 hours — more as you rank up", icon: Gift },
-  { to: "/rakeback", img: promoRake, title: "Rakeback", text: "Get a cut of every bet back, win or lose", icon: Percent },
+  { to: "/vip", img: promoVip, iconImg: promoVip, title: "VIP Club", text: "Double daily rewards, double rakeback & custom cosmetics" },
+  { to: "/rewards", img: promoDaily, iconImg: promoDaily, title: "Daily Rewards", text: "Claim free coins every 24 hours — more as you rank up" },
+  { to: "/rakeback", img: promoRake, iconImg: promoRake, title: "Rakeback", text: "Get a cut of every bet back, win or lose" },
 ] as const;
 
 function Home() {
@@ -38,10 +38,11 @@ function Home() {
       <div className="grid gap-4 md:grid-cols-3">
         {PROMOS.map((p) => (
           <Link key={p.to} to={p.to} className="group relative h-44 overflow-hidden rounded-2xl border border-border shadow-card">
+            <SnowCap />
             <img src={p.img} alt="" className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
             <div className="relative flex h-full max-w-[70%] flex-col justify-end p-5">
-              <p.icon className="mb-2 size-6 text-primary" />
+              <img src={p.iconImg} alt="" className="mb-2 size-7 rounded-md object-contain drop-shadow" />
               <p className="font-display text-3xl leading-none tracking-wide">{p.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{p.text}</p>
             </div>
