@@ -6,8 +6,8 @@ import { LiveBets } from "@/components/app/LiveBets";
 import { SectionTitle, SnowCap } from "@/components/common/bits";
 import { useApp } from "@/lib/app-context";
 const promoVip = "/vip-club-icon.png";
-const promoDaily = "/daily-rewards-icon.jpg";
-const promoRake = "/rakeback-icon.jpg";
+const promoDaily = "/daily-rewards-icon.png";
+const promoRake = "/rakeback-icon.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({

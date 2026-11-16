@@ -56,7 +56,7 @@ export function SnowCap({ className }: { className?: string }) {
 export function VipTag() {
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-gradient-gold px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary-foreground shadow-sm">
-      <img src="/vip-badge.jpg" alt="VIP" className="size-4 rounded object-cover" />
+      <img src="/vip-badge.png" alt="VIP" className="size-4 object-contain drop-shadow-sm" />
       VIP
     </span>
   );
