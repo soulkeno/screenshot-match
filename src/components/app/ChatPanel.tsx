@@ -174,7 +174,7 @@ function ChatLine({ m, avatar, mine, onUser }: { m: Msg; avatar: string | null; 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <button onClick={onUser} className="truncate text-[13px] font-bold hover:underline" style={{ color: rank.tone }}>
-            <UserName username={m.username} font={equipped.fontFamily} glow={equipped.glowClass} />
+            <UserName name={m.username} font={equipped.fontFamily} glow={equipped.glowClass} />
           </button>
           {m.is_vip && <VipTag />}
           <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular">{time}</span>

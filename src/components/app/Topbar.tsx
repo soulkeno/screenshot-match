@@ -248,7 +248,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
               <div className="flex items-center gap-3 p-2.5 border-b border-border/60 pb-3 mb-1">
                 <UserAvatar name={profile.username} url={profile.avatar_url} size={40} />
                 <div className="min-w-0 flex-1">
-                  <UserName username={profile.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-sm font-bold truncate block" />
+                  <UserName name={profile.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-sm font-bold truncate block" />
                   <p className="text-[11px] text-muted-foreground truncate">Player Profile</p>
                 </div>
               </div>
