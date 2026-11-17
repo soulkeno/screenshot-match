@@ -58,8 +58,7 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
             name={p.username}
             url={p.avatar_url}
             size={80}
-            frame={equipped.frameUrl}
-            className={equipped.frameUrl ? "rounded-full" : "rounded-2xl ring-4 ring-popover"}
+            className="rounded-full ring-4 ring-popover"
           />
           <div className="pb-1">
             <div className="flex items-center gap-2">
@@ -119,7 +118,7 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
               setCosmeticsOpen(true);
             }}
           >
-            <Sparkles className="size-4" /> Cosmetics & Frames
+            <Sparkles className="size-4" /> Cosmetics (Fonts & Glows)
           </Button>
         )}
         {canAdmin && (

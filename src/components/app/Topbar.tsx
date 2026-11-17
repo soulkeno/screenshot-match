@@ -237,7 +237,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
                 className="relative ml-1 rounded-full p-0.5 ring-2 ring-transparent transition hover:ring-primary/60 focus:outline-none"
                 aria-label="Account & Cosmetics menu"
               >
-                <UserAvatar name={profile.username} url={profile.avatar_url} size={38} frame={equipped.frameUrl} />
+                <UserAvatar name={profile.username} url={profile.avatar_url} size={38} />
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -246,7 +246,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
               className="w-60 p-2 border-border bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl animate-fade-up z-50"
             >
               <div className="flex items-center gap-3 p-2.5 border-b border-border/60 pb-3 mb-1">
-                <UserAvatar name={profile.username} url={profile.avatar_url} size={40} frame={equipped.frameUrl} />
+                <UserAvatar name={profile.username} url={profile.avatar_url} size={40} />
                 <div className="min-w-0 flex-1">
                   <UserName username={profile.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-sm font-bold truncate block" />
                   <p className="text-[11px] text-muted-foreground truncate">Player Profile</p>

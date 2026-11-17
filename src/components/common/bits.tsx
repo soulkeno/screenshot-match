@@ -24,7 +24,6 @@ export function UserAvatar({
   url,
   size = 32,
   className,
-  frame,
 }: {
   name: string;
   url?: string | null;
@@ -32,53 +31,21 @@ export function UserAvatar({
   className?: string;
   frame?: string | null;
 }) {
-  const hasFrame = !!frame;
-  // When a frame is present, the inner circle pfp scales to ~82% so the frame's ring
-  // cleanly borders it with 1-2px overlap, keeping the overall avatar compact and normal-sized.
-  const pfpSize = hasFrame ? Math.round(size * 0.82) : size;
-  const pfpStyle = { width: pfpSize, height: pfpSize, fontSize: pfpSize * 0.45 };
-
+  const style = { width: size, height: size, fontSize: size * 0.45 };
   return (
     <div
-      className="relative inline-flex shrink-0 items-center justify-center select-none"
+      className={cn("relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full select-none", className)}
       style={{ width: size, height: size }}
     >
-      {/* PFP (circular so it fits cleanly inside the frame ring) */}
-      <div
-        className={cn(
-          "overflow-hidden rounded-full shrink-0 flex items-center justify-center",
-          hasFrame ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0" : "size-full",
-          className
-        )}
-        style={{ width: pfpSize, height: pfpSize }}
-      >
-        {url ? (
-          <img
-            src={url}
-            alt={name}
-            className="size-full object-cover rounded-full"
-            style={{ width: "100%", height: "100%" }}
-          />
-        ) : (
-          <div
-            style={pfpStyle}
-            className={cn(
-              "grid size-full place-items-center font-bold text-foreground rounded-full",
-              AVATAR_TONES[hash(name || "?") % AVATAR_TONES.length]
-            )}
-          >
-            {(name || "?").charAt(0).toUpperCase()}
-          </div>
-        )}
-      </div>
-
-      {/* Frame overlay - natural, proportional size with subtle overflow for decorations */}
-      {frame && (
-        <img
-          src={frame}
-          alt=""
-          className="pointer-events-none absolute -inset-[8%] size-[116%] max-w-none object-contain z-10 select-none drop-shadow-sm"
-        />
+      {url ? (
+        <img src={url} alt={name} style={style} className="size-full rounded-full object-cover" />
+      ) : (
+        <div
+          style={style}
+          className={cn("grid size-full place-items-center rounded-full font-bold text-foreground", AVATAR_TONES[hash(name || "?") % AVATAR_TONES.length])}
+        >
+          {(name || "?").charAt(0).toUpperCase()}
+        </div>
       )}
     </div>
   );

@@ -168,7 +168,7 @@ function ChatLine({ m, avatar, mine, onUser }: { m: Msg; avatar: string | null; 
   return (
     <div className={cn("group flex gap-2.5 rounded-xl px-2.5 py-2 animate-fade-up", mine ? "bg-primary/8" : "hover:bg-surface/70")}>
       <button onClick={onUser} className="relative shrink-0">
-        <UserAvatar name={m.username} url={avatar} size={32} frame={equipped.frameUrl} />
+        <UserAvatar name={m.username} url={avatar} size={32} />
         <RankIcon wagered={m.user_wagered} size={16} className="absolute -bottom-1 -right-1" />
       </button>
       <div className="min-w-0 flex-1">

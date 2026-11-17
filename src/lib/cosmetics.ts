@@ -1,14 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useCallback } from "react";
 
-export interface FrameItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  category: "frame";
-}
-
 export interface FontItem {
   id: string;
   name: string;
@@ -26,22 +18,7 @@ export interface GlowItem {
   category: "glow";
 }
 
-export type AnyCosmetic = FrameItem | FontItem | GlowItem;
-
-export const COSMETIC_FRAMES: FrameItem[] = [
-  { id: "frame-1", name: "Nutcracker Royal", price: 50000, image: "/frames/frame-1.png", category: "frame" },
-  { id: "frame-2", name: "Cyber Visor", price: 75000, image: "/frames/frame-2.png", category: "frame" },
-  { id: "frame-3", name: "Neon Gamer", price: 60000, image: "/frames/frame-3.png", category: "frame" },
-  { id: "frame-4", name: "Blue Scholar", price: 40000, image: "/frames/frame-4.png", category: "frame" },
-  { id: "frame-5", name: "Gothic Bunny", price: 65000, image: "/frames/frame-5.png", category: "frame" },
-  { id: "frame-6", name: "Pastel Unicorn", price: 80000, image: "/frames/frame-6.png", category: "frame" },
-  { id: "frame-7", name: "Disco Star", price: 55000, image: "/frames/frame-7.png", category: "frame" },
-  { id: "frame-8", name: "Blue Floral", price: 70000, image: "/frames/frame-8.png", category: "frame" },
-  { id: "frame-9", name: "Midnight Rose", price: 60000, image: "/frames/frame-9.png", category: "frame" },
-  { id: "frame-10", name: "Frost Crown", price: 90000, image: "/frames/frame-10.png", category: "frame" },
-  { id: "frame-11", name: "Mecha Neko", price: 85000, image: "/frames/frame-11.png", category: "frame" },
-  { id: "frame-12", name: "Thunder Glow", price: 50000, image: "/frames/frame-12.png", category: "frame" },
-];
+export type AnyCosmetic = FontItem | GlowItem;
 
 export const COSMETIC_FONTS: FontItem[] = [
   { id: "font-default", name: "Default Clean", price: 0, fontFamily: "inherit", preview: "AaBbCc", category: "font" },
@@ -67,7 +44,6 @@ export const COSMETIC_GLOWS: GlowItem[] = [
 export interface UserCosmeticsData {
   owned: string[]; // item ids
   equipped: {
-    frame: string | null;
     font: string | null;
     glow: string | null;
   };
@@ -76,7 +52,6 @@ export interface UserCosmeticsData {
 const DEFAULT_COSMETICS: UserCosmeticsData = {
   owned: ["font-default", "glow-default"],
   equipped: {
-    frame: null,
     font: "font-default",
     glow: "glow-default",
   },
@@ -91,7 +66,6 @@ export function getLocalCosmetics(userId: string | null): UserCosmeticsData {
     return {
       owned: Array.isArray(parsed.owned) ? Array.from(new Set([...DEFAULT_COSMETICS.owned, ...parsed.owned])) : DEFAULT_COSMETICS.owned,
       equipped: {
-        frame: parsed.equipped?.frame ?? null,
         font: parsed.equipped?.font ?? "font-default",
         glow: parsed.equipped?.glow ?? "glow-default",
       },
@@ -125,7 +99,7 @@ export function useCosmetics(userId: string | null) {
   }, [userId]);
 
   const equip = useCallback(
-    (category: "frame" | "font" | "glow", id: string | null) => {
+    (category: "font" | "glow", id: string | null) => {
       const current = getLocalCosmetics(userId);
       const next: UserCosmeticsData = {
         ...current,
@@ -159,14 +133,12 @@ export function useCosmetics(userId: string | null) {
     equip,
     addOwned,
     isOwned: (id: string) => data.owned.includes(id),
-    isEquipped: (category: "frame" | "font" | "glow", id: string | null) => data.equipped[category] === id,
+    isEquipped: (category: "font" | "glow", id: string | null) => data.equipped[category] === id,
   };
 }
 
-export function getFrameUrl(frameId: string | null | undefined): string | null {
-  if (!frameId) return null;
-  const item = COSMETIC_FRAMES.find((f) => f.id === frameId);
-  return item ? item.image : null;
+export function getFrameUrl(_frameId?: string | null): null {
+  return null;
 }
 
 export function getFontFamily(fontId: string | null | undefined): string {
@@ -184,7 +156,7 @@ export function getGlowClass(glowId: string | null | undefined): string {
 export function getEquippedStyles(userId: string | null) {
   const data = getLocalCosmetics(userId);
   return {
-    frameUrl: getFrameUrl(data.equipped.frame),
+    frameUrl: null,
     fontFamily: getFontFamily(data.equipped.font),
     glowClass: getGlowClass(data.equipped.glow),
   };
@@ -193,7 +165,7 @@ export function getEquippedStyles(userId: string | null) {
 export function useEquippedStyles(userId: string | null) {
   const { equipped } = useCosmetics(userId);
   return {
-    frameUrl: getFrameUrl(equipped.frame),
+    frameUrl: null,
     fontFamily: getFontFamily(equipped.font),
     glowClass: getGlowClass(equipped.glow),
   };
