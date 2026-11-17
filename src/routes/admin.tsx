@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Ban, Crown, Loader2, Minus, Plus, Search, ShieldCheck, Ticket, Trash2, Users } from "lucide-react";
+import { Ban, Crown, Loader2, Minus, Plus, Search, ShieldCheck, Ticket, Trash2, UserX, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { adminWipeUserFn } from "@/lib/games.functions";
+import { adminWipeUserFn, adminDeleteUserFn } from "@/lib/games.functions";
 import { Amount, PageHeader, RankTag, UserAvatar, VipTag } from "@/components/common/bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,7 @@ function UsersTab() {
 function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
   const { userId } = useApp();
   const wipeUser = useServerFn(adminWipeUserFn);
+  const deleteUser = useServerFn(adminDeleteUserFn);
   const [p, setP] = useState<P | null>(null);
   const [bal, setBal] = useState<number | null>(null);
   const [admin, setAdmin] = useState(false);
@@ -88,6 +89,7 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmAdmin, setConfirmAdmin] = useState(false);
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const load = useCallback(async () => {
     const [a, b, c] = await Promise.all([
@@ -162,6 +164,18 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
           <Trash2 /> Wipe Player
         </Button>
       </Section>
+      <Section title="Delete Account (Spam / Alts)">
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-muted-foreground mb-2">
+          Permanently deletes this player account and authentication credentials. They will be completely removed and won't show up on your Admin Panel anymore.
+        </div>
+        <Button
+          variant="destructive"
+          disabled={!!busy || p.id === userId || p.username.toLowerCase() === "keno"}
+          onClick={() => setConfirmDelete(true)}
+        >
+          <UserX /> Permanently Delete Account
+        </Button>
+      </Section>
       <AlertDialog open={confirmAdmin} onOpenChange={setConfirmAdmin}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>{p.username} will get full access to the Admin Panel, including coins, bans and codes.</AlertDialogDescription></AlertDialogHeader>
@@ -196,6 +210,37 @@ function UserPanel({ id, onChanged }: { id: string; onChanged: () => void }) {
               }}
             >
               Wipe Player
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete {p.username}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will PERMANENTLY remove this account from both authentication and the database. The user will be gone and will NOT show up on your Admin Panel anymore. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                setBusy("delete");
+                try {
+                  await deleteUser({ data: { targetUserId: id } });
+                  setConfirmDelete(false);
+                  toast.success(`Account ${p.username} permanently deleted`);
+                  onChanged();
+                } catch (err) {
+                  toast.error(errMsg(err));
+                } finally {
+                  setBusy(null);
+                }
+              }}
+            >
+              Permanently Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

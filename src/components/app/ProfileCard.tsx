@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Loader2, ShieldCheck, Calendar, Sparkles } from "lucide-react";
+import { Loader2, ShieldCheck, Calendar, Sparkles, Coins, Send } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useApp } from "@/lib/app-context";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Amount, UserAvatar, UserName, VipTag } from "@/components/common/bits";
 import { rankProgress } from "@/lib/ranks";
-import { fmtCompact, fmtInt } from "@/lib/format";
+import { errMsg, fmt, fmtCompact, fmtInt } from "@/lib/format";
 import { gameName } from "@/lib/games/registry";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useEquippedStyles } from "@/lib/cosmetics";
 
@@ -40,12 +42,30 @@ export function ProfileCardDialog() {
 }
 
 function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; bets: Tables<"bets">[]; canAdmin: boolean; onClose: () => void }) {
-  const { userId, setCosmeticsOpen } = useApp();
+  const { userId, setCosmeticsOpen, refresh } = useApp();
+  const [tipOpen, setTipOpen] = useState(false);
+  const [tipAmt, setTipAmt] = useState("100");
+  const [tipBusy, setTipBusy] = useState(false);
   const equipped = useEquippedStyles(p.id);
   const prog = rankProgress(p.total_wagered);
   const profit = Number(p.total_payout) - Number(p.total_wagered);
   const banned = p.banned_until && new Date(p.banned_until) > new Date();
   const isMe = p.id === userId;
+
+  async function handleSendTip() {
+    const a = Number(tipAmt);
+    if (!Number.isFinite(a) || a < 10) return toast.error("Minimum tip is 10 coins");
+    setTipBusy(true);
+    const { error } = await supabase.rpc("send_tip", {
+      p_username: p.username,
+      p_amount: a,
+    });
+    setTipBusy(false);
+    if (error) return toast.error(errMsg(error));
+    toast.success(`Sent ${fmt(a)} coins tip to @${p.username}! 🪙`);
+    setTipOpen(false);
+    void refresh();
+  }
 
   return (
     <div className="animate-pop-in">
@@ -120,6 +140,68 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
           >
             <Sparkles className="size-4" /> Cosmetics (Fonts & Glows)
           </Button>
+        )}
+        {!isMe && userId && (
+          <div className="mt-4">
+            {!tipOpen ? (
+              <Button
+                variant="outline"
+                className="w-full border-gold/50 text-gold hover:bg-gold/10 gap-2 font-bold"
+                onClick={() => setTipOpen(true)}
+              >
+                <Coins className="size-4" /> Tip Player
+              </Button>
+            ) : (
+              <div className="rounded-xl border border-gold/40 bg-gold/5 p-3 animate-fade-up">
+                <p className="text-xs font-bold text-gold flex items-center gap-1.5 mb-2">
+                  <Coins className="size-3.5" /> Tip Coins to @{p.username}
+                </p>
+                <div className="flex gap-1.5 mb-2">
+                  {[50, 100, 500, 1000].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setTipAmt(String(v))}
+                      className={cn(
+                        "flex-1 rounded-lg border py-1 text-xs font-bold transition",
+                        Number(tipAmt) === v
+                          ? "border-gold bg-gold text-primary-foreground"
+                          : "border-border bg-surface text-foreground hover:bg-surface-2"
+                      )}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    min={10}
+                    value={tipAmt}
+                    onChange={(e) => setTipAmt(e.target.value)}
+                    placeholder="Amount (min 10)"
+                    className="h-9 bg-background text-sm font-bold"
+                  />
+                  <Button
+                    size="sm"
+                    className="bg-gold text-primary-foreground hover:bg-gold/90 font-bold px-3 shrink-0"
+                    disabled={tipBusy || !(Number(tipAmt) >= 10)}
+                    onClick={handleSendTip}
+                  >
+                    {tipBusy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground px-2 shrink-0"
+                    onClick={() => setTipOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
         {canAdmin && (
           <Button asChild variant="surface" className="mt-4 w-full" onClick={onClose}>

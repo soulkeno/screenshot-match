@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CloudRain, Send, Smile, X, ArrowDown, Users, Timer, Loader2 } from "lucide-react";
+import { CloudRain, Send, Smile, X, ArrowDown, Users, Timer, Loader2, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -22,7 +22,7 @@ const EMOJIS = "😀 😂 🤣 😍 😎 🤑 😭 😡 🤯 🥶 🥵 😈 💀
 const avatarCache = new Map<string, string | null>();
 
 export function ChatPanel({ onClose }: { onClose: () => void }) {
-  const { userId, openProfile, profile } = useApp();
+  const { userId, openProfile, profile, refresh } = useApp();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -90,6 +90,40 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   async function send() {
     const content = text.trim();
     if (!content || sending || !userId) return;
+
+    // Check for tipping command: /tip @username amount
+    if (content.toLowerCase().startsWith("/tip")) {
+      const match = content.match(/^\/tip\s+@?([a-zA-Z0-9_\-.]+)\s+([0-9]+(\.[0-9]+)?)$/i);
+      if (!match) {
+        toast.error("Usage: /tip @username <amount>");
+        return;
+      }
+      const targetUsername = match[1];
+      const amount = Number(match[2]);
+      if (!Number.isFinite(amount) || amount < 10) {
+        toast.error("Minimum tip is 10 coins");
+        return;
+      }
+
+      setSending(true);
+      const { error } = await supabase.rpc("send_tip", {
+        p_username: targetUsername,
+        p_amount: amount,
+      });
+      setSending(false);
+
+      if (error) {
+        toast.error(errMsg(error));
+        return;
+      }
+
+      toast.success(`Successfully tipped ${fmt(amount)} coins to @${targetUsername}! 🪙`);
+      setText("");
+      atBottomRef.current = true;
+      void refresh();
+      return;
+    }
+
     setSending(true);
     const { error } = await supabase.from("chat_messages").insert({ user_id: userId, content });
     setSending(false);
@@ -158,6 +192,17 @@ function ChatLine({ m, avatar, mine, onUser }: { m: Msg; avatar: string | null; 
   const time = new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const equipped = useEquippedStyles(m.user_id ?? null);
   if (m.kind !== "user") {
+    if (m.kind === "tip") {
+      return (
+        <div className="flex items-center gap-2.5 rounded-xl border border-gold/40 bg-gradient-to-r from-gold/15 via-gold/5 to-transparent px-3 py-2 text-xs font-semibold text-gold shadow-sm animate-fade-up">
+          <div className="grid size-6 place-items-center rounded-full bg-gold/20 text-gold shrink-0">
+            <Coins className="size-3.5" />
+          </div>
+          <span className="font-bold text-foreground/95 flex-1">{m.content}</span>
+          <span className="text-[10px] text-muted-foreground tabular">{time}</span>
+        </div>
+      );
+    }
     return (
       <div className={cn("flex items-start gap-2 rounded-xl border px-3 py-2 text-xs animate-fade-up", m.kind === "rain" ? "border-accent/30 bg-accent/10 text-accent" : "border-border bg-surface-2 text-muted-foreground")}>
         <CloudRain className="mt-0.5 size-3.5 shrink-0" /><span className="font-medium">{m.content}</span>

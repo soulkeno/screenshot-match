@@ -30,6 +30,8 @@ type Ctx = {
   setCosmeticsOpen: (v: boolean) => void;
   fairOpen: boolean;
   setFairOpen: (v: boolean) => void;
+  wheelOpen: boolean;
+  setWheelOpen: (v: boolean) => void;
 };
 
 const AppContext = createContext<Ctx | null>(null);
@@ -46,6 +48,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cosmeticsOpen, setCosmeticsOpen] = useState(false);
   const [fairOpen, setFairOpen] = useState(false);
+  const [wheelOpen, setWheelOpen] = useState(false);
   const [balance, setDisplayBalance] = useState(0);
   const holding = useRef(false);
   const latest = useRef(0);
@@ -145,9 +148,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(
     () => ({
       ready, session, userId, profile, wallet, isAdmin, balance, hold, release, setBalance, refresh, favorites, toggleFavorite,
-      chatOpen, setChatOpen, profileCard, openProfile: setProfileCard, settingsOpen, setSettingsOpen, cosmeticsOpen, setCosmeticsOpen, fairOpen, setFairOpen,
+      chatOpen, setChatOpen, profileCard, openProfile: setProfileCard, settingsOpen, setSettingsOpen, cosmeticsOpen, setCosmeticsOpen, fairOpen, setFairOpen, wheelOpen, setWheelOpen,
     }),
-    [ready, session, userId, profile, wallet, isAdmin, balance, hold, release, setBalance, refresh, favorites, toggleFavorite, chatOpen, setChatOpen, profileCard, settingsOpen, cosmeticsOpen, fairOpen],
+    [ready, session, userId, profile, wallet, isAdmin, balance, hold, release, setBalance, refresh, favorites, toggleFavorite, chatOpen, setChatOpen, profileCard, settingsOpen, cosmeticsOpen, fairOpen, wheelOpen],
   );
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

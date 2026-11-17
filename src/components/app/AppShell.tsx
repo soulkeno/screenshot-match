@@ -12,12 +12,14 @@ import { SettingsDialog } from "./SettingsDialog";
 import { ProfileCardDialog } from "./ProfileCard";
 import { FairnessDialog } from "./FairnessDialog";
 import { CosmeticsDialog } from "./CosmeticsDialog";
+import { LevelUpDialog } from "./LevelUpDialog";
+import { WheelDialog } from "./WheelDialog";
 import { Logo } from "@/components/common/bits";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { ready, session, profile, chatOpen, setChatOpen } = useApp();
+  const { ready, session, profile, chatOpen, setChatOpen, wheelOpen, setWheelOpen } = useApp();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -70,6 +72,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ProfileCardDialog />
       <FairnessDialog />
       <CosmeticsDialog />
+      <LevelUpDialog />
+      <WheelDialog open={wheelOpen} onOpenChange={setWheelOpen} />
     </div>
   );
 }

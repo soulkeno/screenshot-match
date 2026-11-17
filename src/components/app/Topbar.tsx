@@ -143,7 +143,7 @@ function GamesMenu() {
 }
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
-  const { profile, balance, chatOpen, setChatOpen, setSettingsOpen, openProfile, setCosmeticsOpen } = useApp();
+  const { profile, balance, chatOpen, setChatOpen, setSettingsOpen, openProfile, setCosmeticsOpen, setWheelOpen } = useApp();
   const equipped = useEquippedStyles(profile?.id ?? null);
   const [q, setQ] = useState("");
   const [avatarOpen, setAvatarOpen] = useState(false);
@@ -224,6 +224,14 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
       </div>
 
       <div className="flex items-center gap-1.5">
+        <button
+          onClick={() => setWheelOpen(true)}
+          className="flex items-center gap-1.5 rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent/20 hover:scale-105 active:scale-95"
+          title="Daily Lucky Wheel"
+        >
+          <Sparkles className="size-3.5 animate-spin" style={{ animationDuration: "4s" }} />
+          <span className="hidden sm:inline">Lucky Wheel</span>
+        </button>
         <button onClick={() => setChatOpen(!chatOpen)} className={cn("rounded-lg border border-border p-2.5 transition-colors hover:bg-surface-2", chatOpen ? "text-primary" : "text-muted-foreground")} aria-label="Toggle chat">
           <MessageSquare className="size-4" />
         </button>
