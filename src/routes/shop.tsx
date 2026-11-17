@@ -180,12 +180,7 @@ function ShopPage() {
                 )}
               >
                 <div className="relative size-20 grid place-items-center mt-1">
-                  <UserAvatar name={profile?.username || "Player"} url={profile?.avatar_url} size={50} />
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="pointer-events-none absolute -inset-[22%] size-[144%] max-w-none object-contain z-10 transition-transform group-hover:scale-105"
-                  />
+                  <UserAvatar name={profile?.username || "Player"} url={profile?.avatar_url} frame={item.image} size={44} />
                 </div>
                 <div className="my-3 w-full">
                   <p className="font-bold text-sm truncate">{item.name}</p>

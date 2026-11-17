@@ -54,7 +54,13 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
       </div>
       <div className="-mt-10 px-6 pb-6">
         <div className="flex items-end gap-4">
-          <UserAvatar name={p.username} url={p.avatar_url} size={80} frame={equipped.frameUrl} className="rounded-2xl ring-4 ring-popover" />
+          <UserAvatar
+            name={p.username}
+            url={p.avatar_url}
+            size={80}
+            frame={equipped.frameUrl}
+            className={equipped.frameUrl ? "rounded-full" : "rounded-2xl ring-4 ring-popover"}
+          />
           <div className="pb-1">
             <div className="flex items-center gap-2">
               <UserName username={p.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-xl font-bold" />

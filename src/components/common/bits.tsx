@@ -33,20 +33,49 @@ export function UserAvatar({
   frame?: string | null;
 }) {
   const style = { width: size, height: size, fontSize: size * 0.45 };
+  // 168x168 canvas with 98px inner hole. Scale of 1.68 makes the hole fit the circular pfp seamlessly
+  const frameSize = Math.round(size * 1.68);
+
   return (
-    <div className="relative inline-flex shrink-0 items-center justify-center select-none" style={{ width: size, height: size }}>
-      {url ? (
-        <img src={url} alt={name} style={style} className={cn("rounded-lg object-cover", className)} />
-      ) : (
-        <div style={style} className={cn("grid place-items-center rounded-lg font-bold text-foreground", AVATAR_TONES[hash(name || "?") % AVATAR_TONES.length], className)}>
-          {(name || "?").charAt(0).toUpperCase()}
-        </div>
-      )}
+    <div
+      className="relative inline-flex shrink-0 items-center justify-center select-none"
+      style={{ width: size, height: size }}
+    >
+      {/* PFP (circular so it fits the circular frame opening) */}
+      <div
+        className={cn(
+          "size-full overflow-hidden rounded-full shrink-0",
+          className
+        )}
+        style={{ width: size, height: size }}
+      >
+        {url ? (
+          <img
+            src={url}
+            alt={name}
+            className="size-full object-cover rounded-full"
+            style={{ width: "100%", height: "100%" }}
+          />
+        ) : (
+          <div
+            style={style}
+            className={cn(
+              "grid size-full place-items-center font-bold text-foreground rounded-full",
+              AVATAR_TONES[hash(name || "?") % AVATAR_TONES.length]
+            )}
+          >
+            {(name || "?").charAt(0).toUpperCase()}
+          </div>
+        )}
+      </div>
+
+      {/* Frame overlay - centered with subpixel precision */}
       {frame && (
         <img
           src={frame}
           alt=""
-          className="pointer-events-none absolute -inset-[22%] size-[144%] max-w-none object-contain z-10"
+          style={{ width: `${frameSize}px`, height: `${frameSize}px` }}
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-none object-contain z-10 select-none"
         />
       )}
     </div>

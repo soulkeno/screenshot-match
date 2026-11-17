@@ -116,12 +116,7 @@ export function CosmeticsDialog() {
                     )}
                   >
                     <div className="relative size-16 grid place-items-center">
-                      <UserAvatar name={profile.username} url={profile.avatar_url} size={42} />
-                      <img
-                        src={f.image}
-                        alt={f.name}
-                        className="pointer-events-none absolute -inset-[22%] size-[144%] max-w-none object-contain z-10"
-                      />
+                      <UserAvatar name={profile.username} url={profile.avatar_url} frame={f.image} size={36} />
                     </div>
                     <p className="mt-2 text-xs font-bold truncate max-w-full">{f.name}</p>
                     {unlocked ? (
