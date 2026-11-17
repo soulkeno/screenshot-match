@@ -32,22 +32,25 @@ export function UserAvatar({
   className?: string;
   frame?: string | null;
 }) {
-  const style = { width: size, height: size, fontSize: size * 0.45 };
-  // 168x168 canvas with 98px inner hole. Scale of 1.68 makes the hole fit the circular pfp seamlessly
-  const frameSize = Math.round(size * 1.68);
+  const hasFrame = !!frame;
+  // When a frame is present, the inner circle pfp scales to ~82% so the frame's ring
+  // cleanly borders it with 1-2px overlap, keeping the overall avatar compact and normal-sized.
+  const pfpSize = hasFrame ? Math.round(size * 0.82) : size;
+  const pfpStyle = { width: pfpSize, height: pfpSize, fontSize: pfpSize * 0.45 };
 
   return (
     <div
       className="relative inline-flex shrink-0 items-center justify-center select-none"
       style={{ width: size, height: size }}
     >
-      {/* PFP (circular so it fits the circular frame opening) */}
+      {/* PFP (circular so it fits cleanly inside the frame ring) */}
       <div
         className={cn(
-          "size-full overflow-hidden rounded-full shrink-0",
+          "overflow-hidden rounded-full shrink-0 flex items-center justify-center",
+          hasFrame ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0" : "size-full",
           className
         )}
-        style={{ width: size, height: size }}
+        style={{ width: pfpSize, height: pfpSize }}
       >
         {url ? (
           <img
@@ -58,7 +61,7 @@ export function UserAvatar({
           />
         ) : (
           <div
-            style={style}
+            style={pfpStyle}
             className={cn(
               "grid size-full place-items-center font-bold text-foreground rounded-full",
               AVATAR_TONES[hash(name || "?") % AVATAR_TONES.length]
@@ -69,13 +72,12 @@ export function UserAvatar({
         )}
       </div>
 
-      {/* Frame overlay - centered with subpixel precision */}
+      {/* Frame overlay - natural, proportional size with subtle overflow for decorations */}
       {frame && (
         <img
           src={frame}
           alt=""
-          style={{ width: `${frameSize}px`, height: `${frameSize}px` }}
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-none object-contain z-10 select-none"
+          className="pointer-events-none absolute -inset-[8%] size-[116%] max-w-none object-contain z-10 select-none drop-shadow-sm"
         />
       )}
     </div>
