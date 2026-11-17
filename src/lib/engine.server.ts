@@ -203,7 +203,7 @@ export async function playInstant(userId: string, game: string, wagerIn: number,
 
 // ---------------- Session games ----------------
 type Session = { id: string; user_id: string; game: string; wager: number; state: any; status: string };
-const SESSION_GAMES = ["mines", "towers", "hilo", "blackjack", "snakes", "crash"];
+const SESSION_GAMES = ["mines", "towers", "hilo", "blackjack", "snakes"]; // crash now runs as shared rounds in features.server.ts
 
 async function getActive(userId: string, game: string): Promise<Session | null> {
   const { data } = await db.from("game_sessions").select("*").eq("user_id", userId).eq("game", game).eq("status", "active").maybeSingle();

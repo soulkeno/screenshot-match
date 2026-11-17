@@ -135,6 +135,125 @@ export type Database = {
           },
         ]
       }
+      crash_bets: {
+        Row: {
+          auto: number | null
+          cashed_at: number | null
+          created_at: string
+          id: number
+          payout: number
+          round_id: number
+          settled: boolean
+          user_id: string
+          username: string
+          wager: number
+        }
+        Insert: {
+          auto?: number | null
+          cashed_at?: number | null
+          created_at?: string
+          id?: number
+          payout?: number
+          round_id: number
+          settled?: boolean
+          user_id: string
+          username: string
+          wager: number
+        }
+        Update: {
+          auto?: number | null
+          cashed_at?: number | null
+          created_at?: string
+          id?: number
+          payout?: number
+          round_id?: number
+          settled?: boolean
+          user_id?: string
+          username?: string
+          wager?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crash_bets_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "crash_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crash_bets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crash_rounds: {
+        Row: {
+          crash_point: number
+          created_at: string
+          ends_at: string
+          id: number
+          seed_hash: string
+          seq: number
+          server_seed: string
+          settled: boolean
+          starts_at: string
+        }
+        Insert: {
+          crash_point: number
+          created_at?: string
+          ends_at: string
+          id?: number
+          seed_hash: string
+          seq: number
+          server_seed: string
+          settled?: boolean
+          starts_at: string
+        }
+        Update: {
+          crash_point?: number
+          created_at?: string
+          ends_at?: string
+          id?: number
+          seed_hash?: string
+          seq?: number
+          server_seed?: string
+          settled?: boolean
+          starts_at?: string
+        }
+        Relationships: []
+      }
+      daily_quests: {
+        Row: {
+          created_at: string
+          day: string
+          quests: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          quests: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          quests?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_quests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fair_seeds: {
         Row: {
           client_seed: string
@@ -422,6 +541,38 @@ export type Database = {
           },
         ]
       }
+      quest_claims: {
+        Row: {
+          amount: number
+          created_at: string
+          day: string
+          idx: number
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          day: string
+          idx: number
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          day?: string
+          idx?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quest_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rain_entries: {
         Row: {
           created_at: string
@@ -517,36 +668,95 @@ export type Database = {
       wallets: {
         Row: {
           balance: number
+          cosmetics: string[]
           last_daily_at: string | null
+          last_quest_day: string | null
+          last_wheel_at: string | null
+          quest_streak: number
           rakeback: number
+          rakeback_boost: number
+          rakeback_boost_until: string | null
           updated_at: string
           user_id: string
           vault: number
+          vault_interest_total: number
           vault_locked_until: string | null
+          vault_since: string | null
         }
         Insert: {
           balance?: number
+          cosmetics?: string[]
           last_daily_at?: string | null
+          last_quest_day?: string | null
+          last_wheel_at?: string | null
+          quest_streak?: number
           rakeback?: number
+          rakeback_boost?: number
+          rakeback_boost_until?: string | null
           updated_at?: string
           user_id: string
           vault?: number
+          vault_interest_total?: number
           vault_locked_until?: string | null
+          vault_since?: string | null
         }
         Update: {
           balance?: number
+          cosmetics?: string[]
           last_daily_at?: string | null
+          last_quest_day?: string | null
+          last_wheel_at?: string | null
+          quest_streak?: number
           rakeback?: number
+          rakeback_boost?: number
+          rakeback_boost_until?: string | null
           updated_at?: string
           user_id?: string
           vault?: number
+          vault_interest_total?: number
           vault_locked_until?: string | null
+          vault_since?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "wallets_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wheel_spins: {
+        Row: {
+          created_at: string
+          id: number
+          label: string
+          slice: number
+          tier: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          label: string
+          slice: number
+          tier: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          label?: string
+          slice?: number
+          tier?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wheel_spins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -588,6 +798,17 @@ export type Database = {
       assert_not_banned: { Args: { p_user: string }; Returns: undefined }
       claim_daily: { Args: never; Returns: number }
       claim_rakeback: { Args: never; Returns: number }
+      daily_race: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          is_vip: boolean
+          total_wagered: number
+          user_id: string
+          username: string
+          wagered: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -597,6 +818,13 @@ export type Database = {
       }
       is_active_player: { Args: { _uid: string }; Returns: boolean }
       join_rain: { Args: { p_rain: string }; Returns: undefined }
+      my_race_place: {
+        Args: never
+        Returns: {
+          place: number
+          wagered: number
+        }[]
+      }
       rank_index: { Args: { w: number }; Returns: number }
       record_bet: {
         Args: {
@@ -608,6 +836,10 @@ export type Database = {
         Returns: undefined
       }
       redeem_code: { Args: { p_code: string }; Returns: number }
+      send_tip: {
+        Args: { p_amount: number; p_username: string }
+        Returns: number
+      }
       settle_instant: {
         Args: {
           p_game: string
@@ -629,8 +861,11 @@ export type Database = {
       }
       start_rain: { Args: { p_amount: number }; Returns: string }
       username_available: { Args: { p_name: string }; Returns: boolean }
+      vault_accrue: { Args: { p_user: string }; Returns: number }
+      vault_collect: { Args: never; Returns: number }
       vault_deposit: { Args: { p_amount: number }; Returns: undefined }
       vault_lock: { Args: never; Returns: string }
+      vault_rate: { Args: { p_user: string }; Returns: number }
       vault_withdraw: { Args: { p_amount: number }; Returns: undefined }
       wallet_credit: {
         Args: { p_amount: number; p_user: string }

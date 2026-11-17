@@ -114,3 +114,55 @@ export const buyCosmeticFn = createServerFn({ method: "POST" })
     const E = await import("./engine.server");
     return E.buyCosmetic(context.userId, data.itemId, data.price);
   });
+
+export const spinWheelFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<any> => {
+    const F = await import("./features.server");
+    return F.spinWheel(context.userId);
+  });
+
+export const getQuestsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<any> => {
+    const F = await import("./features.server");
+    return F.getQuests(context.userId);
+  });
+
+export const claimQuestFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { idx: number }) => ({ idx: Math.floor(Number(d.idx)) }))
+  .handler(async ({ data, context }): Promise<any> => {
+    const F = await import("./features.server");
+    return F.claimQuest(context.userId, data.idx);
+  });
+
+export const adminDeleteUserFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { targetUserId: string }) => ({ targetUserId: String(d.targetUserId) }))
+  .handler(async ({ data, context }): Promise<any> => {
+    const F = await import("./features.server");
+    return F.adminDeleteUser(context.userId, data.targetUserId);
+  });
+
+export const crashStateFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<any> => {
+    const F = await import("./features.server");
+    return F.crashState(context.userId);
+  });
+
+export const crashBetFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { wager: number; auto: number | null }) => d)
+  .handler(async ({ data, context }): Promise<any> => {
+    const F = await import("./features.server");
+    return F.crashBet(context.userId, data.wager, data.auto);
+  });
+
+export const crashCashoutFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<any> => {
+    const F = await import("./features.server");
+    return F.crashCashout(context.userId);
+  });

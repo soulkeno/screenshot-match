@@ -15,6 +15,13 @@
       "when": 1794937240201,
       "tag": "0001_restrict_shared_reads_to_active_players",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794953105793,
+      "tag": "0002_update_wheel_quests_tips_vault_crash",
+      "breakpoints": true
     }
   ]
 }
