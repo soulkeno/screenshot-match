@@ -595,6 +595,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_player: { Args: { _uid: string }; Returns: boolean }
       join_rain: { Args: { p_rain: string }; Returns: undefined }
       rank_index: { Args: { w: number }; Returns: number }
       record_bet: {
