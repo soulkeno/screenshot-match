@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, Trophy, Zap, Gift, Clock, Loader2, Coins, ArrowRight, ShieldCheck } from "lucide-react";
+import { Sparkles, Trophy, Zap, Gift, Clock, Loader2, Coins, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Coin, Amount } from "@/components/common/bits";
@@ -13,16 +13,16 @@ import { sfx } from "@/lib/sound";
 import { errMsg, fmt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-// 8 distinct vibrant slice colors
-const SLICE_COLORS = [
-  "#8b5cf6", // Purple
-  "#ec4899", // Pink
-  "#3b82f6", // Blue
-  "#10b981", // Emerald
-  "#f59e0b", // Amber
-  "#06b6d4", // Cyan
-  "#f43f5e", // Rose
-  "#eab308", // Gold
+// Luxurious slice gradient definitions for high-end look
+const SLICE_THEMES = [
+  { fill1: "#6366f1", fill2: "#4338ca", border: "#818cf8", text: "#ffffff" }, // Indigo
+  { fill1: "#ec4899", fill2: "#be185d", border: "#f472b6", text: "#ffffff" }, // Pink
+  { fill1: "#06b6d4", fill2: "#0e7490", border: "#22d3ee", text: "#ffffff" }, // Cyan
+  { fill1: "#10b981", fill2: "#047857", border: "#34d399", text: "#ffffff" }, // Emerald
+  { fill1: "#f59e0b", fill2: "#b45309", border: "#fbbf24", text: "#ffffff" }, // Amber
+  { fill1: "#8b5cf6", fill2: "#6d28d9", border: "#a78bfa", text: "#ffffff" }, // Purple
+  { fill1: "#f43f5e", fill2: "#be123c", border: "#fb7185", text: "#ffffff" }, // Rose
+  { fill1: "#eab308", fill2: "#a16207", border: "#fde047", text: "#ffffff" }, // Gold
 ];
 
 export function WheelDialog({
@@ -32,11 +32,11 @@ export function WheelDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { profile, userId, setBalance } = useApp();
+  const { profile, userId, setBalance, refresh } = useApp();
   const spinFn = useServerFn(spinWheelFn);
 
   const prog = rankProgress(profile?.total_wagered);
-  const myTier = wheelTierFor(prog.cur.level);
+  const myTier = wheelTierFor(prog.cur.index);
   const [selectedTier, setSelectedTier] = useState<WheelTier>(myTier);
 
   // Sync selected tier with user rank
@@ -60,7 +60,7 @@ export function WheelDialog({
     return () => clearInterval(t);
   }, []);
 
-  // Fetch last spin time from wallet
+  // Fetch last spin time from wallet or storage
   useEffect(() => {
     if (!userId || !open) return;
     const key = `keno:last_spin:${userId}`;
@@ -97,32 +97,29 @@ export function WheelDialog({
         setBalance(res.balance);
       }
 
-      // Calculate target angle
       // Slices: 8 slices = 45 degrees per slice.
-      // Top pointer is at 0 degrees / 360 degrees.
-      // Slice i spans [i * 45, (i + 1) * 45]. Center of slice i is (i + 0.5) * 45.
-      // To bring slice i to the top (0 deg), we rotate by: 360 - (i + 0.5) * 45.
       const sliceIdx = res.slice ?? 0;
       const sliceAngle = 360 / slices.length;
+      // In SVG: slice 0 starts at 0 deg (top-right from -90)
       const targetCenter = 360 - (sliceIdx + 0.5) * sliceAngle;
 
-      // Add 5 to 7 full 360 rotations for realistic momentum
+      // 6 full 360 rotations for realistic momentum
       const fullRotations = 360 * 6;
       const finalRotation = rotation + fullRotations + (targetCenter - (rotation % 360));
 
       setRotation(finalRotation);
 
-      // Play click sounds during spin
+      // Play click ticking sounds during spin
       let clicks = 0;
       const clickInterval = setInterval(() => {
         clicks++;
         try {
           sfx.click();
         } catch {}
-        if (clicks >= 25) clearInterval(clickInterval);
-      }, 150);
+        if (clicks >= 26) clearInterval(clickInterval);
+      }, 160);
 
-      // After animation completes (4.5s)
+      // Animation duration: 4.5s
       setTimeout(() => {
         clearInterval(clickInterval);
         setSpinning(false);
@@ -133,7 +130,8 @@ export function WheelDialog({
         try {
           sfx.win();
         } catch {}
-        toast.success(`You won: ${res.label}! 🎉`);
+        toast.success(`🎉 You won: ${res.label}!`);
+        void refresh();
       }, 4500);
     } catch (e) {
       setSpinning(false);
@@ -143,22 +141,27 @@ export function WheelDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border bg-popover max-w-lg max-h-[92vh] overflow-y-auto p-0 flex flex-col no-scrollbar">
-        <DialogHeader className="p-6 pb-2 border-b border-border text-center sm:text-left">
-          <DialogTitle className="flex items-center justify-center sm:justify-start gap-2.5 text-2xl font-black uppercase tracking-wide">
-            <Sparkles className="size-6 text-gold animate-bounce" /> Daily Lucky Wheel
-          </DialogTitle>
-          <DialogDescription>
-            Spin every 24 hours for free Coins, Rakeback Boosters, and rare Cosmetics. Higher ranks unlock upgraded wheels!
+      <DialogContent className="border-border bg-popover max-w-lg max-h-[92vh] overflow-y-auto p-0 flex flex-col no-scrollbar shadow-2xl">
+        <DialogHeader className="p-5 pb-3 border-b border-border text-center sm:text-left bg-gradient-to-r from-surface-2 to-surface">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2.5 text-xl font-black uppercase tracking-wide">
+              <Sparkles className="size-5 text-gold animate-bounce" /> Daily Lucky Wheel
+            </DialogTitle>
+            <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border border-gold/40 bg-gold/10 text-gold">
+              Free 24h Spin
+            </span>
+          </div>
+          <DialogDescription className="text-xs">
+            Spin every 24 hours to win free Coins, Rakeback Boosters, and rare Cosmetics!
           </DialogDescription>
         </DialogHeader>
 
         <div className="p-6 flex flex-col items-center">
-          {/* Wheel Tier Tabs */}
-          <div className="flex gap-1.5 p-1 rounded-xl border border-border bg-surface mb-6 w-full max-w-sm justify-center">
+          {/* Wheel Tier Selector */}
+          <div className="flex gap-2 p-1 rounded-xl border border-border bg-surface mb-6 w-full max-w-sm justify-center shadow-inner">
             {(["bronze", "gold", "diamond"] as const).map((t) => {
               const def = WHEELS[t];
-              const unlocked = prog.cur.level >= def.minRank;
+              const unlocked = prog.cur.index >= def.minRank;
               const isSelected = selectedTier === t;
               return (
                 <button
@@ -166,56 +169,89 @@ export function WheelDialog({
                   disabled={spinning}
                   onClick={() => setSelectedTier(t)}
                   className={cn(
-                    "flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-1",
+                    "flex-1 py-2 px-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5",
                     isSelected
                       ? t === "diamond"
-                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md"
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg ring-1 ring-cyan-300"
                         : t === "gold"
-                          ? "bg-gradient-gold text-primary-foreground shadow-md"
-                          : "bg-surface-2 text-foreground ring-1 ring-primary/40 shadow-sm"
+                          ? "bg-gradient-to-r from-amber-500 to-yellow-600 text-primary-foreground shadow-lg ring-1 ring-amber-300"
+                          : "bg-surface-2 text-foreground ring-1 ring-primary/40 shadow-md"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span className="capitalize">{t}</span>
-                  {!unlocked && <span className="text-[10px] opacity-60">🔒</span>}
+                  <span>{t}</span>
+                  {!unlocked && <span className="text-[10px] opacity-75">🔒</span>}
                 </button>
               );
             })}
           </div>
 
-          {/* Interactive 3D Spinning Wheel Canvas */}
-          <div className="relative size-72 sm:size-80 flex items-center justify-center select-none">
-            {/* Pointer / Flapper Arrow at the top center */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
-              <svg width="34" height="42" viewBox="0 0 34 42" fill="none">
+          {/* Interactive Wheel Graphic Container */}
+          <div className="relative size-72 sm:size-84 flex items-center justify-center select-none my-2">
+            {/* Ambient Lighting Rays */}
+            <div className="absolute inset-0 rounded-full blur-2xl opacity-20 bg-gradient-to-tr from-gold via-accent to-primary pointer-events-none" />
+
+            {/* Pointer / Flapper Arrow at Top Center */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] pointer-events-none">
+              <svg width="36" height="44" viewBox="0 0 36 44" fill="none">
                 <path
-                  d="M17 40L4 10C2 6 5 2 9 2H25C29 2 32 6 30 10L17 40Z"
-                  fill="url(#pointerGold)"
+                  d="M18 42L4 12C2 8 5 3 10 3H26C31 3 34 8 32 12L18 42Z"
+                  fill="url(#pointerGoldGrad)"
                   stroke="#ffffff"
-                  strokeWidth="2"
+                  strokeWidth="2.5"
                 />
+                <circle cx="18" cy="14" r="4" fill="#ffffff" />
                 <defs>
-                  <linearGradient id="pointerGold" x1="17" y1="2" x2="17" y2="40" gradientUnits="userSpaceOnUse">
+                  <linearGradient id="pointerGoldGrad" x1="18" y1="3" x2="18" y2="42" gradientUnits="userSpaceOnUse">
                     <stop stopColor="#fef08a" />
-                    <stop offset="1" stopColor="#ca8a04" />
+                    <stop offset="0.5" stopColor="#eab308" />
+                    <stop offset="1" stopColor="#a16207" />
                   </linearGradient>
                 </defs>
               </svg>
             </div>
 
-            {/* Glowing Outer Rim with Studs */}
-            <div className="absolute inset-0 rounded-full border-4 border-gold/60 shadow-[0_0_30px_rgba(234,179,8,0.25)] pointer-events-none z-20" />
+            {/* Golden Beveled Outer Rim with Glowing Bulbs */}
+            <div className="absolute inset-0 rounded-full border-8 border-amber-500/80 shadow-[0_0_35px_rgba(234,179,8,0.35),inset_0_0_15px_rgba(0,0,0,0.8)] pointer-events-none z-20">
+              {/* Rim Stud Lights */}
+              {Array.from({ length: 16 }).map((_, i) => {
+                const ang = (i * 360) / 16;
+                const rad = (ang * Math.PI) / 180;
+                const r = 48.5; // percent
+                const x = 50 + r * Math.cos(rad);
+                const y = 50 + r * Math.sin(rad);
+                return (
+                  <div
+                    key={i}
+                    className="absolute size-2 rounded-full -translate-x-1/2 -translate-y-1/2 bg-yellow-100 shadow-[0_0_6px_#fef08a]"
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                  />
+                );
+              })}
+            </div>
 
-            {/* Rotating Wheel Graphic */}
+            {/* Rotating Wheel Disc */}
             <div
               className="relative size-full rounded-full overflow-hidden shadow-2xl transition-transform"
               style={{
                 transform: `rotate(${rotation}deg)`,
                 transitionDuration: spinning ? "4.5s" : "0s",
-                transitionTimingFunction: "cubic-bezier(0.15, 0.9, 0.25, 1)",
+                transitionTimingFunction: "cubic-bezier(0.12, 0.95, 0.22, 1)",
               }}
             >
               <svg viewBox="0 0 300 300" className="size-full">
+                <defs>
+                  {slices.map((_, i) => {
+                    const theme = SLICE_THEMES[i % SLICE_THEMES.length];
+                    return (
+                      <linearGradient key={`grad-${i}`} id={`slice-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor={theme.fill1} />
+                        <stop offset="100%" stopColor={theme.fill2} />
+                      </linearGradient>
+                    );
+                  })}
+                </defs>
+
                 {slices.map((slice, i) => {
                   const angle = 360 / slices.length;
                   const startAngle = i * angle;
@@ -230,98 +266,108 @@ export function WheelDialog({
 
                   const midAngle = startAngle + angle / 2;
                   const midRad = ((midAngle - 90) * Math.PI) / 180;
-                  const textX = 150 + 95 * Math.cos(midRad);
-                  const textY = 150 + 95 * Math.sin(midRad);
+                  const textX = 150 + 96 * Math.cos(midRad);
+                  const textY = 150 + 96 * Math.sin(midRad);
+
+                  const theme = SLICE_THEMES[i % SLICE_THEMES.length];
 
                   return (
                     <g key={i}>
-                      {/* Wedge Slice */}
+                      {/* Wedge Slice with Bevel Gradient */}
                       <path
                         d={`M150,150 L${x1},${y1} A150,150 0 0,1 ${x2},${y2} Z`}
-                        fill={SLICE_COLORS[i % SLICE_COLORS.length]}
-                        stroke="#1e1e2d"
-                        strokeWidth="2.5"
+                        fill={`url(#slice-grad-${i})`}
+                        stroke="#0f172a"
+                        strokeWidth="2"
                       />
 
-                      {/* Prize Label rotated along radius */}
+                      {/* Slice Border Accent Line */}
+                      <line
+                        x1="150"
+                        y1="150"
+                        x2={x2}
+                        y2={y2}
+                        stroke="rgba(255,255,255,0.25)"
+                        strokeWidth="1.5"
+                      />
+
+                      {/* Prize Label with Crisp Shadow */}
                       <text
                         x={textX}
                         y={textY}
                         fill="#ffffff"
-                        fontSize="12"
+                        fontSize="13"
                         fontWeight="900"
-                        fontFamily="sans-serif"
+                        fontFamily="ui-sans-serif, system-ui, sans-serif"
                         textAnchor="middle"
                         dominantBaseline="central"
                         transform={`rotate(${midAngle + 90}, ${textX}, ${textY})`}
-                        style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" }}
+                        style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.9))" }}
                       >
                         {slice.label}
                       </text>
                     </g>
                   );
                 })}
-
-                {/* Outer Rim Lights */}
-                {Array.from({ length: 24 }).map((_, idx) => {
-                  const bulbAngle = (idx * (360 / 24) * Math.PI) / 180;
-                  const bx = 150 + 142 * Math.cos(bulbAngle);
-                  const by = 150 + 142 * Math.sin(bulbAngle);
-                  return (
-                    <circle
-                      key={idx}
-                      cx={bx}
-                      cy={by}
-                      r="3.5"
-                      fill={idx % 2 === 0 ? "#fef08a" : "#ffffff"}
-                      style={{ filter: "drop-shadow(0 0 3px #fef08a)" }}
-                    />
-                  );
-                })}
               </svg>
             </div>
 
-            {/* Central Hub Button */}
-            <div className="absolute size-20 rounded-full border-4 border-gold bg-gradient-to-br from-surface-2 via-surface to-background shadow-2xl flex flex-col items-center justify-center z-20 pointer-events-none">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gold">KENO</span>
-              <Coins className="size-5 text-gold animate-pulse" />
+            {/* Center Chrome & Gold Hub with Faceted Star */}
+            <div className="absolute size-20 rounded-full z-20 flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.8)] border-4 border-amber-400 bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900">
+              <div className="size-12 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-200 flex items-center justify-center shadow-inner border border-white/40">
+                <Sparkles className="size-6 text-slate-950 fill-current animate-spin" style={{ animationDuration: "12s" }} />
+              </div>
             </div>
           </div>
 
-          {/* Won Prize Notification Banner */}
-          {wonPrize && (
-            <div className="mt-5 w-full rounded-2xl border border-gold/40 bg-gradient-to-r from-gold/20 via-surface to-gold/10 p-4 text-center animate-fade-up">
-              <p className="text-xs font-bold uppercase tracking-wider text-gold">Prize Awarded!</p>
-              <p className="text-xl font-black text-foreground mt-0.5">{wonPrize.label}</p>
-              {wonPrize.cosmetic && (
-                <p className="text-xs text-muted-foreground mt-0.5">Unlocked cosmetic: {wonPrize.cosmetic}</p>
-              )}
-            </div>
-          )}
-
-          {/* Action / Countdown Button */}
-          <div className="mt-6 w-full max-w-xs space-y-2 text-center">
+          {/* Action / Spin Button & Cooldown */}
+          <div className="w-full max-w-sm mt-5 space-y-3">
             {selectedTier !== myTier ? (
-              <div className="rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
-                <ShieldCheck className="size-4 inline text-primary mr-1" />
-                Reach <strong>{wheelDef.name}</strong> at rank tier {wheelDef.minRank} to spin this wheel!
+              <div className="rounded-xl border border-border bg-surface p-3 text-center text-xs text-muted-foreground">
+                <p className="font-bold text-foreground">
+                  {WHEELS[selectedTier].name} unlocks at rank level {WHEELS[selectedTier].minRank}
+                </p>
+                <p className="mt-0.5">Wager more coins to unlock upgraded wheel tiers!</p>
               </div>
             ) : canSpin ? (
               <Button
+                variant="play"
                 size="xl"
                 disabled={spinning}
                 onClick={handleSpin}
-                className="w-full font-black text-base uppercase tracking-wider shadow-press bg-gradient-gold text-primary-foreground hover:brightness-110"
+                className="w-full text-base font-black uppercase tracking-wider shadow-glow animate-pulse"
               >
-                {spinning ? <Loader2 className="size-5 animate-spin mr-2" /> : <Sparkles className="size-5 mr-2" />}
-                Spin For Free
+                {spinning ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="size-5 animate-spin" /> Spinning...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="size-5" /> Spin Lucky Wheel
+                  </span>
+                )}
               </Button>
             ) : (
-              <div className="rounded-xl border border-border bg-surface p-3 text-center space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground flex items-center justify-center gap-1.5">
+              <div className="rounded-xl border border-border bg-surface/80 p-3.5 text-center text-xs space-y-1">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-center gap-1.5">
                   <Clock className="size-3.5 text-accent" /> Next Free Spin In
                 </p>
-                <p className="font-mono text-2xl font-black text-foreground tabular">{formattedCountdown}</p>
+                <p className="text-xl font-black font-mono tracking-tight text-primary tabular">
+                  {formattedCountdown}
+                </p>
+              </div>
+            )}
+
+            {wonPrize && (
+              <div className="rounded-xl border border-success/40 bg-success/10 p-3 text-center animate-pop-in">
+                <p className="text-xs font-bold text-success flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="size-4" /> You won {wonPrize.label}!
+                </p>
+                {wonPrize.cosmetic && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Cosmetic unlocked: <strong>{wonPrize.cosmetic}</strong> (check your Cosmetics locker)
+                  </p>
+                )}
               </div>
             )}
           </div>

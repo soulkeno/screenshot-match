@@ -15,7 +15,7 @@ const HOME = [
 const LIBRARY = [
   { to: "/shop", label: "Shop", icon: ShoppingBag },
   { to: "/stats", label: "Profile Stats", icon: BarChart3 },
-  { to: "/rewards", label: "Daily Rewards", icon: Gift },
+  { to: "/rewards", label: "Rewards & Quests", icon: Gift },
   { to: "/rakeback", label: "Rakeback", icon: Percent },
   { to: "/vip", label: "VIP", icon: Crown },
 ] as const;

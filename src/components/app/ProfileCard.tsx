@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useEquippedStyles } from "@/lib/cosmetics";
+import { showLevelUpAnimation } from "./LevelUpDialog";
 
 export function ProfileCardDialog() {
   const { profileCard, openProfile, isAdmin, userId } = useApp();
@@ -93,8 +94,22 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
         <div className="mt-5 flex items-center gap-4 rounded-xl border border-border bg-surface p-4">
           <img src={prog.cur.icon} alt={prog.cur.name} className="size-16 animate-float" />
           <div className="flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Rank</p>
-            <p className="text-xl font-bold" style={{ color: prog.cur.tone }}>{prog.cur.name}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Rank</p>
+                <p className="text-xl font-bold" style={{ color: prog.cur.tone }}>{prog.cur.name}</p>
+              </div>
+              {isMe && (
+                <button
+                  type="button"
+                  onClick={() => showLevelUpAnimation(prog.cur)}
+                  className="rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-primary hover:bg-primary/20 transition flex items-center gap-1 shadow-sm"
+                  title="Watch Rank Level Up Celebration"
+                >
+                  <Sparkles className="size-3" /> View Crest
+                </button>
+              )}
+            </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background"><div className="h-full rounded-full bg-gradient-primary" style={{ width: `${prog.pct}%` }} /></div>
             <p className="mt-1 text-[11px] text-muted-foreground">{prog.next ? `${fmtCompact(prog.remaining)} wagered to ${prog.next.name}` : "Highest rank"}</p>
           </div>

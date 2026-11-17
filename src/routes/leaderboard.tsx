@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Trophy, Clock, Flame, Crown, Medal, UserCheck } from "lucide-react";
+import { Trophy, Crown, Medal, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Amount, Coin, RankIcon, RankTag, UserAvatar, VipTag, UserName } from "@/components/common/bits";
 import { useApp } from "@/lib/app-context";
@@ -12,96 +12,65 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
-      { title: "Daily Race Leaderboard — Keno Casino" },
-      { name: "description", content: "Compete in the daily wager race. Real-time live rankings updated 24/7." },
-      { property: "og:title", content: "Daily Race Leaderboard — Keno Casino" },
+      { title: "Leaderboard — Keno Casino" },
+      { name: "description", content: "All-time highest wagerers & high rollers. Real-time live rankings updated 24/7." },
+      { property: "og:title", content: "Leaderboard — Keno Casino" },
     ],
   }),
   component: LeaderboardPage,
 });
 
-interface RacePlayer {
+interface LeaderboardPlayer {
   id: string;
   username: string;
   avatar_url: string | null;
   is_vip: boolean;
   total_wagered: number;
-  wagered: number;
 }
 
 export function LeaderboardPage() {
   const { openProfile, userId, profile } = useApp();
-  const [players, setPlayers] = useState<RacePlayer[]>([]);
+  const [players, setPlayers] = useState<LeaderboardPlayer[]>([]);
   const [myRank, setMyRank] = useState<number | null>(null);
   const [myWagered, setMyWagered] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [now, setNow] = useState(Date.now());
-
-  // Real-time countdown to next UTC midnight (00:00:00 UTC)
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const timeUntilReset = useMemo(() => {
-    const d = new Date(now);
-    const midnight = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1, 0, 0, 0));
-    const diff = Math.max(0, midnight.getTime() - now);
-    const h = String(Math.floor(diff / 3_600_000)).padStart(2, "0");
-    const m = String(Math.floor((diff % 3_600_000) / 60_000)).padStart(2, "0");
-    const s = String(Math.floor((diff % 60_000) / 1000)).padStart(2, "0");
-    return `${h}:${m}:${s}`;
-  }, [now]);
 
   useEffect(() => {
     let cancel = false;
     async function load() {
       setLoading(true);
       try {
-        // Attempt daily_race RPC
-        const { data, error } = await supabase.rpc("daily_race" as any, { p_limit: 50 });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          if (!cancel) {
-            setPlayers(
-              data.map((r: any) => ({
-                id: r.user_id,
-                username: r.username || "Player",
-                avatar_url: r.avatar_url,
-                is_vip: !!r.is_vip,
-                total_wagered: Number(r.total_wagered || 0),
-                wagered: Number(r.wagered || 0),
-              }))
-            );
-          }
-        } else {
-          // Fallback: Query profiles by total_wagered or today's bets
-          const { data: profs } = await supabase
-            .from("profiles")
-            .select("id, username, avatar_url, is_vip, total_wagered")
-            .gt("total_wagered", 0)
-            .order("total_wagered", { ascending: false })
-            .limit(50);
+        // Query profiles ordered strictly by all-time total_wagered
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url, is_vip, total_wagered")
+          .order("total_wagered", { ascending: false })
+          .limit(100);
 
-          if (!cancel && profs) {
-            setPlayers(
-              profs.map((p) => ({
-                id: p.id,
-                username: p.username || "Player",
-                avatar_url: p.avatar_url,
-                is_vip: !!p.is_vip,
-                total_wagered: Number(p.total_wagered || 0),
-                wagered: Number(p.total_wagered || 0),
-              }))
-            );
-          }
-        }
+        if (!cancel && data) {
+          const list: LeaderboardPlayer[] = data.map((p) => ({
+            id: p.id,
+            username: p.username || "Player",
+            avatar_url: p.avatar_url,
+            is_vip: !!p.is_vip,
+            total_wagered: Number(p.total_wagered || 0),
+          }));
+          setPlayers(list);
 
-        // Fetch my place
-        if (userId) {
-          const { data: myData } = await supabase.rpc("my_race_place" as any);
-          if (!cancel && Array.isArray(myData) && myData[0]) {
-            setMyRank(Number(myData[0].place));
-            setMyWagered(Number(myData[0].wagered || 0));
+          // Find exact user rank in the list
+          if (userId) {
+            const idx = list.findIndex((p) => p.id === userId);
+            if (idx !== -1) {
+              setMyRank(idx + 1);
+              setMyWagered(list[idx].total_wagered);
+            } else if (profile?.total_wagered) {
+              const { count } = await supabase
+                .from("profiles")
+                .select("id", { count: "exact", head: true })
+                .gt("total_wagered", profile.total_wagered);
+              setMyRank((count ?? 0) + 1);
+              setMyWagered(Number(profile.total_wagered));
+            }
           }
         }
       } catch {
@@ -115,18 +84,7 @@ export function LeaderboardPage() {
     return () => {
       cancel = true;
     };
-  }, [userId]);
-
-  // If user is in the loaded players list, ensure rank is known
-  useEffect(() => {
-    if (userId && players.length > 0) {
-      const idx = players.findIndex((p) => p.id === userId);
-      if (idx !== -1) {
-        setMyRank(idx + 1);
-        setMyWagered(players[idx].wagered);
-      }
-    }
-  }, [userId, players]);
+  }, [userId, profile?.total_wagered]);
 
   // Podium order according to the requested layout: #4, #2, #1 (center & tallest), #3, #5
   const top1 = players[0] ?? null;
@@ -138,14 +96,17 @@ export function LeaderboardPage() {
 
   return (
     <div className="animate-fade-up space-y-6">
-      {/* Top Race Header Card */}
+      {/* Top Header Card */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-r from-surface-2 via-surface to-background p-6 shadow-card">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
               <Trophy className="size-6 text-gold animate-bounce" />
-              <h1 className="text-2xl font-black uppercase tracking-wide">Daily Race</h1>
+              <h1 className="text-2xl font-black uppercase tracking-wide">Leaderboard</h1>
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              All-time highest wagerers & high rollers. Updated in real time.
+            </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-semibold">
               <div className="flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-1.5 backdrop-blur-sm">
@@ -153,17 +114,11 @@ export function LeaderboardPage() {
                 <span className={cn("font-bold text-sm", myRank ? "text-primary" : "text-muted-foreground")}>
                   {myRank ? `#${myRank}` : "Not ranked"}
                 </span>
-                {myRank && myWagered > 0 && (
+                {myWagered > 0 && (
                   <span className="text-[11px] text-muted-foreground ml-1">
                     (<Coin className="size-3 inline mr-0.5" />{fmtCompact(myWagered)})
                   </span>
                 )}
-              </div>
-
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-1.5 backdrop-blur-sm">
-                <Clock className="size-3.5 text-accent" />
-                <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Resets In</span>
-                <span className="font-mono font-bold text-sm text-foreground tabular">{timeUntilReset}</span>
               </div>
             </div>
           </div>
@@ -204,10 +159,10 @@ export function LeaderboardPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-muted-foreground animate-pulse">Loading daily race rankings...</div>
+          <div className="p-12 text-center text-sm text-muted-foreground animate-pulse">Loading leaderboard...</div>
         ) : rest.length === 0 ? (
           <div className="p-10 text-center text-sm text-muted-foreground">
-            {players.length === 0 ? "No bets placed yet today. Place a bet to take #1!" : "Top players shown on the podium above."}
+            {players.length === 0 ? "No players registered yet." : "Top players shown on the podium above."}
           </div>
         ) : (
           <div className="divide-y divide-border/60">
@@ -252,7 +207,7 @@ export function LeaderboardPage() {
                   <div className="col-span-2 sm:col-span-3 text-right font-bold tabular text-sm">
                     <span className="inline-flex items-center gap-1">
                       <Coin className="size-3.5 inline" />
-                      {fmt(p.wagered, 2)}
+                      {fmt(p.total_wagered, 0)}
                     </span>
                   </div>
                 </button>
@@ -272,7 +227,7 @@ function PodiumCard({
   onOpen,
   isSelf,
 }: {
-  player: RacePlayer | null;
+  player: LeaderboardPlayer | null;
   rank: number;
   isWinner?: boolean;
   onOpen: (id: string) => void;
@@ -355,7 +310,7 @@ function PodiumCard({
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Wagered</p>
         <p className="font-bold text-xs tabular mt-0.5 text-foreground flex items-center justify-center gap-1 truncate">
           <Coin className="size-3 shrink-0" />
-          <span>{player ? fmt(player.wagered, 0) : "0"}</span>
+          <span>{player ? fmt(player.total_wagered, 0) : "0"}</span>
         </p>
       </div>
     </div>
