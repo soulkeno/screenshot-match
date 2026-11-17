@@ -19,6 +19,7 @@ import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as VaultRouteImport } from './routes/vault'
 import { Route as VipRouteImport } from './routes/vip'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as PlaySlugRouteImport } from './routes/play.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const VipRoute = VipRouteImport.update({
   path: '/vip',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlaySlugRoute = PlaySlugRouteImport.update({
   id: '/play/$slug',
   path: '/play/$slug',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/stats': typeof StatsRoute
   '/vault': typeof VaultRoute
   '/vip': typeof VipRoute
+  '/shop': typeof ShopRoute
   '/play/$slug': typeof PlaySlugRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/vault': typeof VaultRoute
   '/vip': typeof VipRoute
+  '/shop': typeof ShopRoute
   '/play/$slug': typeof PlaySlugRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/stats': typeof StatsRoute
   '/vault': typeof VaultRoute
   '/vip': typeof VipRoute
+  '/shop': typeof ShopRoute
   '/play/$slug': typeof PlaySlugRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/vault'
     | '/vip'
+    | '/shop'
     | '/play/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/vault'
     | '/vip'
+    | '/shop'
     | '/play/$slug'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/vault'
     | '/vip'
+    | '/shop'
     | '/play/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   StatsRoute: typeof StatsRoute
   VaultRoute: typeof VaultRoute
   VipRoute: typeof VipRoute
+  ShopRoute: typeof ShopRoute
   PlaySlugRoute: typeof PlaySlugRoute
 }
 
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VipRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/play/$slug': {
       id: '/play/$slug'
       path: '/play/$slug'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatsRoute: StatsRoute,
   VaultRoute: VaultRoute,
   VipRoute: VipRoute,
+  ShopRoute: ShopRoute,
   PlaySlugRoute: PlaySlugRoute,
 }
 export const routeTree = rootRouteImport

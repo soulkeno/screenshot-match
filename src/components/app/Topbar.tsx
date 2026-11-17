@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, Search, Settings, MessageSquare, Vault, Loader2, Gamepad2, ChevronDown, ChevronRight, Star, History, Trophy } from "lucide-react";
+import { Menu, Search, Settings, MessageSquare, Vault, Loader2, Gamepad2, ChevronDown, ChevronRight, Star, History, Trophy, Sparkles, User, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/lib/app-context";
 import { GAMES } from "@/lib/games/registry";
-import { Amount, RankIcon, UserAvatar } from "@/components/common/bits";
+import { Amount, RankIcon, UserAvatar, UserName } from "@/components/common/bits";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEquippedStyles } from "@/lib/cosmetics";
 
 type P = { id: string; username: string; avatar_url: string | null; total_wagered: number };
 
@@ -142,8 +143,10 @@ function GamesMenu() {
 }
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
-  const { profile, balance, chatOpen, setChatOpen, setSettingsOpen, openProfile } = useApp();
+  const { profile, balance, chatOpen, setChatOpen, setSettingsOpen, openProfile, setCosmeticsOpen } = useApp();
+  const equipped = useEquippedStyles(profile?.id ?? null);
   const [q, setQ] = useState("");
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [players, setPlayers] = useState<P[]>([]);
   const [loading, setLoading] = useState(false);
@@ -228,9 +231,75 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           <Settings className="size-4" />
         </button>
         {profile && (
-          <button onClick={() => openProfile(profile.id)} className="ml-1 rounded-lg ring-2 ring-transparent transition hover:ring-primary/60" aria-label="Your profile">
-            <UserAvatar name={profile.username} url={profile.avatar_url} size={38} />
-          </button>
+          <Popover open={avatarOpen} onOpenChange={setAvatarOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="relative ml-1 rounded-full p-0.5 ring-2 ring-transparent transition hover:ring-primary/60 focus:outline-none"
+                aria-label="Account & Cosmetics menu"
+              >
+                <UserAvatar name={profile.username} url={profile.avatar_url} size={38} frame={equipped.frameUrl} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              sideOffset={8}
+              className="w-60 p-2 border-border bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl animate-fade-up z-50"
+            >
+              <div className="flex items-center gap-3 p-2.5 border-b border-border/60 pb-3 mb-1">
+                <UserAvatar name={profile.username} url={profile.avatar_url} size={40} frame={equipped.frameUrl} />
+                <div className="min-w-0 flex-1">
+                  <UserName username={profile.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-sm font-bold truncate block" />
+                  <p className="text-[11px] text-muted-foreground truncate">Player Profile</p>
+                </div>
+              </div>
+
+              {/* User Avatar Click -> Cosmetics Button as requested */}
+              <button
+                onClick={() => {
+                  setAvatarOpen(false);
+                  setCosmeticsOpen(true);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition bg-gradient-primary/10 text-primary hover:bg-gradient-primary/20 group my-1 border border-primary/20"
+              >
+                <Sparkles className="size-4 text-primary group-hover:rotate-12 transition-transform" />
+                <span>Cosmetics</span>
+                <span className="ml-auto text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full shadow-sm">
+                  Equip
+                </span>
+              </button>
+
+              <Link
+                to="/shop"
+                onClick={() => setAvatarOpen(false)}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition hover:bg-surface-2 text-foreground"
+              >
+                <ShoppingBag className="size-4 text-accent" />
+                <span>Shop</span>
+              </Link>
+
+              <button
+                onClick={() => {
+                  setAvatarOpen(false);
+                  openProfile(profile.id);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition hover:bg-surface-2 text-foreground"
+              >
+                <User className="size-4 text-muted-foreground" />
+                <span>My Profile</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setAvatarOpen(false);
+                  setSettingsOpen(true);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition hover:bg-surface-2 text-foreground"
+              >
+                <Settings className="size-4 text-muted-foreground" />
+                <span>Settings</span>
+              </button>
+            </PopoverContent>
+          </Popover>
         )}
       </div>
     </header>

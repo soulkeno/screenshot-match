@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { getRank } from "@/lib/ranks";
 import { fmt, fmtCompact } from "@/lib/format";
+import { getFontFamily, getGlowClass } from "@/lib/cosmetics";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -18,13 +19,63 @@ function hash(s: string) {
   return Math.abs(h);
 }
 
-export function UserAvatar({ name, url, size = 32, className }: { name: string; url?: string | null; size?: number; className?: string }) {
+export function UserAvatar({
+  name,
+  url,
+  size = 32,
+  className,
+  frame,
+}: {
+  name: string;
+  url?: string | null;
+  size?: number;
+  className?: string;
+  frame?: string | null;
+}) {
   const style = { width: size, height: size, fontSize: size * 0.45 };
-  if (url) return <img src={url} alt={name} style={style} className={cn("shrink-0 rounded-lg object-cover", className)} />;
   return (
-    <div style={style} className={cn("grid shrink-0 place-items-center rounded-lg font-bold text-foreground", AVATAR_TONES[hash(name || "?") % AVATAR_TONES.length], className)}>
-      {(name || "?").charAt(0).toUpperCase()}
+    <div className="relative inline-flex shrink-0 items-center justify-center select-none" style={{ width: size, height: size }}>
+      {url ? (
+        <img src={url} alt={name} style={style} className={cn("rounded-lg object-cover", className)} />
+      ) : (
+        <div style={style} className={cn("grid place-items-center rounded-lg font-bold text-foreground", AVATAR_TONES[hash(name || "?") % AVATAR_TONES.length], className)}>
+          {(name || "?").charAt(0).toUpperCase()}
+        </div>
+      )}
+      {frame && (
+        <img
+          src={frame}
+          alt=""
+          className="pointer-events-none absolute -inset-[22%] size-[144%] max-w-none object-contain z-10"
+        />
+      )}
     </div>
+  );
+}
+
+export function UserName({
+  name,
+  className,
+  font,
+  glow,
+  style,
+}: {
+  name: string;
+  className?: string;
+  font?: string | null;
+  glow?: string | null;
+  style?: React.CSSProperties;
+}) {
+  const fontFamily = font && font !== "font-default" ? getFontFamily(font) : undefined;
+  const glowClass = glow && glow !== "glow-default" ? getGlowClass(glow) : "";
+
+  return (
+    <span
+      className={cn("truncate font-medium transition-all", glowClass, className)}
+      style={{ ...style, ...(fontFamily ? { fontFamily } : {}) }}
+    >
+      {name}
+    </span>
   );
 }
 
@@ -64,9 +115,11 @@ export function VipTag() {
 
 export function Coin({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-grid size-4 shrink-0 place-items-center rounded-full bg-gradient-gold shadow-press", className)}>
-      <span className="size-1.5 rounded-full bg-primary-foreground/30" />
-    </span>
+    <img
+      src="/coin.png"
+      alt="Coins"
+      className={cn("inline-block size-4 shrink-0 object-contain drop-shadow-sm select-none", className)}
+    />
   );
 }
 

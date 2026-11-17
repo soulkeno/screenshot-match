@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Star, History, Trophy, BarChart3, Gift, Percent, Crown, ShieldCheck, ChevronsLeft, ChevronsRight, Vault } from "lucide-react";
+import { Home, Star, History, Trophy, BarChart3, Gift, Percent, Crown, ShieldCheck, ChevronsLeft, ChevronsRight, Vault, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/lib/app-context";
 import { Logo, RankIcon } from "@/components/common/bits";
@@ -13,6 +13,7 @@ const HOME = [
   { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
 ] as const;
 const LIBRARY = [
+  { to: "/shop", label: "Shop", icon: ShoppingBag },
   { to: "/stats", label: "Profile Stats", icon: BarChart3 },
   { to: "/rewards", label: "Daily Rewards", icon: Gift },
   { to: "/rakeback", label: "Rakeback", icon: Percent },

@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Loader2, ShieldCheck, Calendar } from "lucide-react";
+import { Loader2, ShieldCheck, Calendar, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useApp } from "@/lib/app-context";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Amount, UserAvatar, VipTag } from "@/components/common/bits";
+import { Amount, UserAvatar, UserName, VipTag } from "@/components/common/bits";
 import { rankProgress } from "@/lib/ranks";
 import { fmtCompact, fmtInt } from "@/lib/format";
 import { gameName } from "@/lib/games/registry";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEquippedStyles } from "@/lib/cosmetics";
 
 export function ProfileCardDialog() {
   const { profileCard, openProfile, isAdmin, userId } = useApp();
@@ -39,9 +40,13 @@ export function ProfileCardDialog() {
 }
 
 function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; bets: Tables<"bets">[]; canAdmin: boolean; onClose: () => void }) {
+  const { userId, setCosmeticsOpen } = useApp();
+  const equipped = useEquippedStyles(p.id);
   const prog = rankProgress(p.total_wagered);
   const profit = Number(p.total_payout) - Number(p.total_wagered);
   const banned = p.banned_until && new Date(p.banned_until) > new Date();
+  const isMe = p.id === userId;
+
   return (
     <div className="animate-pop-in">
       <div className="relative h-24 overflow-hidden" style={{ background: `radial-gradient(120% 140% at 20% 0%, ${prog.cur.tone}, transparent 70%)` }}>
@@ -49,10 +54,10 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
       </div>
       <div className="-mt-10 px-6 pb-6">
         <div className="flex items-end gap-4">
-          <UserAvatar name={p.username} url={p.avatar_url} size={80} className="rounded-2xl ring-4 ring-popover" />
+          <UserAvatar name={p.username} url={p.avatar_url} size={80} frame={equipped.frameUrl} className="rounded-2xl ring-4 ring-popover" />
           <div className="pb-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold">{p.username}</h2>
+              <UserName username={p.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-xl font-bold" />
               {p.is_vip && <VipTag />}
             </div>
             <p className="flex items-center gap-1 text-xs text-muted-foreground"><Calendar className="size-3" /> Joined {new Date(p.created_at).toLocaleDateString()}</p>
@@ -98,6 +103,18 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
               ))}
             </div>
           </div>
+        )}
+        {isMe && (
+          <Button
+            variant="outline"
+            className="mt-4 w-full border-primary/50 text-primary hover:bg-primary/10 gap-2 font-bold"
+            onClick={() => {
+              onClose();
+              setCosmeticsOpen(true);
+            }}
+          >
+            <Sparkles className="size-4" /> Cosmetics & Frames
+          </Button>
         )}
         {canAdmin && (
           <Button asChild variant="surface" className="mt-4 w-full" onClick={onClose}>

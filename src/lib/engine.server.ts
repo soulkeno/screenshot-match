@@ -776,3 +776,15 @@ export async function adminWipeUser(callerId: string, targetUserId: string) {
   const { data: w } = await db.from("wallets").select("balance").eq("user_id", targetUserId).maybeSingle();
   return { ok: true, balance: Number(w?.balance ?? 0) };
 }
+
+// ---------------- Cosmetics ----------------
+export async function buyCosmetic(userId: string, itemId: string, price: number) {
+  if (price < 0 || !Number.isFinite(price)) fail("Invalid price");
+  if (price > 0) {
+    const { data: w } = await db.from("wallets").select("balance").eq("user_id", userId).single();
+    if (!w || Number(w.balance) < price) fail("Not enough coins to buy this item");
+    await debit(userId, price);
+  }
+  const { data: updatedW } = await db.from("wallets").select("balance").eq("user_id", userId).single();
+  return { ok: true, balance: Number(updatedW?.balance ?? 0) };
+}

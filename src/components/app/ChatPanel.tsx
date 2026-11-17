@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useApp } from "@/lib/app-context";
-import { Amount, RankIcon, UserAvatar, VipTag } from "@/components/common/bits";
+import { Amount, RankIcon, UserAvatar, UserName, VipTag } from "@/components/common/bits";
 import { getRank } from "@/lib/ranks";
 import { errMsg, fmt, timeLeft } from "@/lib/format";
+import { useEquippedStyles } from "@/lib/cosmetics";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -155,6 +156,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
 
 function ChatLine({ m, avatar, mine, onUser }: { m: Msg; avatar: string | null; mine: boolean; onUser: () => void }) {
   const time = new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const equipped = useEquippedStyles(m.user_id ?? null);
   if (m.kind !== "user") {
     return (
       <div className={cn("flex items-start gap-2 rounded-xl border px-3 py-2 text-xs animate-fade-up", m.kind === "rain" ? "border-accent/30 bg-accent/10 text-accent" : "border-border bg-surface-2 text-muted-foreground")}>
@@ -166,12 +168,14 @@ function ChatLine({ m, avatar, mine, onUser }: { m: Msg; avatar: string | null; 
   return (
     <div className={cn("group flex gap-2.5 rounded-xl px-2.5 py-2 animate-fade-up", mine ? "bg-primary/8" : "hover:bg-surface/70")}>
       <button onClick={onUser} className="relative shrink-0">
-        <UserAvatar name={m.username} url={avatar} size={32} />
+        <UserAvatar name={m.username} url={avatar} size={32} frame={equipped.frameUrl} />
         <RankIcon wagered={m.user_wagered} size={16} className="absolute -bottom-1 -right-1" />
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <button onClick={onUser} className="truncate text-[13px] font-bold hover:underline" style={{ color: rank.tone }}>{m.username}</button>
+          <button onClick={onUser} className="truncate text-[13px] font-bold hover:underline" style={{ color: rank.tone }}>
+            <UserName username={m.username} font={equipped.fontFamily} glow={equipped.glowClass} />
+          </button>
           {m.is_vip && <VipTag />}
           <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular">{time}</span>
         </div>

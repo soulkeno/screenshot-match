@@ -11,6 +11,7 @@ import { SnowEffect } from "./SnowEffect";
 import { SettingsDialog } from "./SettingsDialog";
 import { ProfileCardDialog } from "./ProfileCard";
 import { FairnessDialog } from "./FairnessDialog";
+import { CosmeticsDialog } from "./CosmeticsDialog";
 import { Logo } from "@/components/common/bits";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SettingsDialog />
       <ProfileCardDialog />
       <FairnessDialog />
+      <CosmeticsDialog />
     </div>
   );
 }
