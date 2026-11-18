@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Star, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+import { AdvancedGameSettingsButton } from "./AdvancedGameSettings";
 import { useApp } from "@/lib/app-context";
 import { GAME_BY_SLUG } from "@/lib/games/registry";
 import { isMuted, setMuted } from "@/lib/sound";
@@ -32,9 +33,12 @@ export function GameLayout({ slug, controls, children, stageClassName }: { slug:
           {meta && <meta.icon className="size-4 text-primary" />}
           {meta?.name}
         </div>
-        <button onClick={() => setFairOpen(true)} className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground">
-          <ShieldCheck className="size-4 text-success" /> Fairness
-        </button>
+        <div className="flex items-center gap-2">
+          <AdvancedGameSettingsButton slug={slug} />
+          <button onClick={() => setFairOpen(true)} className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground">
+            <ShieldCheck className="size-4 text-success" /> Fairness
+          </button>
+        </div>
       </div>
     </div>
   );

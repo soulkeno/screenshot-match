@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Hand, Plus, Split, Layers } from "lucide-react";
+import { Hand, Plus, Split, Layers, Sparkles } from "lucide-react";
 import { GameLayout, BetInput } from "./GameLayout";
 import { useBetAmount, useSession } from "./useGame";
+import { getAdvancedSettings } from "./AdvancedGameSettings";
 import { PlayingCard } from "./PlayingCard";
 import { Button } from "@/components/ui/button";
 import { Coin } from "@/components/common/bits";
@@ -50,10 +51,31 @@ export default function Blackjack() {
   async function deal() {
     setFlash(null);
     prevCount.current = 0;
-    await begin(Number(bet));
+    const adv = getAdvancedSettings();
+    await begin(Number(bet), { trollMode: adv.trollMode });
   }
   const canDouble = cur && cur.cards.length === 2;
   const canSplit = cur && hands.length === 1 && cur.cards.length === 2 && Math.min(10, cur.cards[0].rank) === Math.min(10, cur.cards[1].rank);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      const adv = getAdvancedSettings();
+      if (!adv.hotkeys) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (!active && !busy) deal();
+      } else if (e.key === "h" || e.key === "H") {
+        if (active && !busy) action("hit");
+      } else if (e.key === "s" || e.key === "S") {
+        if (active && !busy) action("stand");
+      } else if (e.key === "d" || e.key === "D") {
+        if (active && !busy && canDouble) action("double");
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [active, busy, canDouble, deal]);
 
   return (
     <GameLayout slug="blackjack" stageClassName="felt" controls={
@@ -94,7 +116,19 @@ export default function Blackjack() {
             </div>
             <div className="flex min-h-[140px] -space-x-12">
               {dealer.map((c, i) => <PlayingCard key={`d${i}`} card={c} delay={i === 0 ? 160 : i * 120} from={SHOE_DEALER} />)}
-              {session?.dealerHidden && <PlayingCard key="hole" card={null} delay={480} from={SHOE_DEALER} />}
+              {session?.dealerHidden && (
+                <div className="relative">
+                  <PlayingCard key="hole" card={null} delay={480} from={SHOE_DEALER} />
+                  {session?.trollDealer?.[1] && (
+                    <div className="absolute inset-0 grid place-items-center rounded-xl bg-destructive/10 ring-2 ring-destructive/60 p-1 pointer-events-none z-10">
+                      <div className="scale-75 opacity-80">
+                        <PlayingCard card={session.trollDealer[1]} delay={0} />
+                      </div>
+                      <span className="absolute bottom-1 text-[9px] font-black uppercase text-destructive tracking-widest bg-black/80 px-1 rounded">X-RAY</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

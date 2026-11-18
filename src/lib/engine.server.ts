@@ -205,14 +205,45 @@ export async function playInstant(userId: string, game: string, wagerIn: number,
 type Session = { id: string; user_id: string; game: string; wager: number; state: any; status: string };
 const SESSION_GAMES = ["mines", "towers", "hilo", "blackjack", "snakes"]; // crash now runs as shared rounds in features.server.ts
 
-async function getActive(userId: string, game: string): Promise<Session | null> {
-  const { data } = await db.from("game_sessions").select("*").eq("user_id", userId).eq("game", game).eq("status", "active").maybeSingle();
-  return (data as any) ?? null;
+// Fast in-memory cache for ultra-low latency tile reveals and actions
+const activeSessionsCache = new Map<string, Session>();
+
+async function checkIsAdmin(userId: string): Promise<boolean> {
+  try {
+    const { data } = await db.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin");
+    return Boolean(data && data.length > 0);
+  } catch {
+    return false;
+  }
 }
+
+async function getActive(userId: string, game: string): Promise<Session | null> {
+  const key = `${userId}:${game}`;
+  const cached = activeSessionsCache.get(key);
+  if (cached && cached.status === "active") return cached;
+
+  const { data } = await db.from("game_sessions").select("*").eq("user_id", userId).eq("game", game).eq("status", "active").maybeSingle();
+  if (data) {
+    const s = data as any as Session;
+    activeSessionsCache.set(key, s);
+    return s;
+  }
+  return null;
+}
+
 async function saveState(s: Session, status = "active") {
   s.status = status;
-  await db.from("game_sessions").update({ state: s.state, status, updated_at: new Date().toISOString() }).eq("id", s.id);
+  const key = `${s.user_id}:${s.game}`;
+  if (status === "active") {
+    activeSessionsCache.set(key, s);
+    // Asynchronous non-blocking save for maximum gameplay speed
+    void db.from("game_sessions").update({ state: s.state, status, updated_at: new Date().toISOString() }).eq("id", s.id);
+  } else {
+    activeSessionsCache.delete(key);
+    await db.from("game_sessions").update({ state: s.state, status, updated_at: new Date().toISOString() }).eq("id", s.id);
+  }
 }
+
 async function cursorFloat(s: Session, count: number) {
   const c = s.state.cursor ?? 0;
   s.state.cursor = c + count;
@@ -231,20 +262,39 @@ async function finish(s: Session, payout: number, status: "won" | "lost") {
 function view(s: Session) {
   const st = s.state;
   const ended = s.status !== "active";
+  const isTroll = Boolean(st.trollMode);
   const base: any = { id: s.id, game: s.game, wager: Number(s.wager), status: s.status, payout: st.payout ?? 0, fair: { hash: st.seed.hash, clientSeed: st.seed.cs, nonce: st.seed.n } };
   switch (s.game) {
     case "mines":
-      return { ...base, mines: st.mines, revealed: st.revealed, multiplier: L.minesMultiplier(st.mines, st.revealed.length), next: L.minesMultiplier(st.mines, st.revealed.length + 1), minePositions: ended ? st.minePositions : undefined, hit: st.hit };
+      return {
+        ...base,
+        mines: st.mines,
+        revealed: st.revealed,
+        multiplier: L.minesMultiplier(st.mines, st.revealed.length),
+        next: L.minesMultiplier(st.mines, st.revealed.length + 1),
+        minePositions: ended ? st.minePositions : undefined,
+        trollMines: isTroll ? st.minePositions : undefined,
+        hit: st.hit
+      };
     case "towers":
-      return { ...base, difficulty: st.difficulty, level: st.level, picks: st.picks, multiplier: L.towerMultiplier(st.difficulty, st.level), next: L.towerMultiplier(st.difficulty, st.level + 1), layout: ended ? st.layout : undefined };
+      return {
+        ...base,
+        difficulty: st.difficulty,
+        level: st.level,
+        picks: st.picks,
+        multiplier: L.towerMultiplier(st.difficulty, st.level),
+        next: L.towerMultiplier(st.difficulty, st.level + 1),
+        layout: ended ? st.layout : undefined,
+        trollLayout: isTroll ? st.layout : undefined
+      };
     case "hilo":
-      return { ...base, cards: st.cards, history: st.history, multiplier: L.floor2(st.multiplier) };
+      return { ...base, cards: st.cards, history: st.history, multiplier: L.floor2(st.multiplier), trollNext: isTroll ? st.cards[st.cards.length - 1] : undefined };
     case "blackjack":
-      return { ...base, hands: st.hands, active: st.active, dealer: ended || st.dealerRevealed ? st.dealer : [st.dealer[0]], dealerHidden: !(ended || st.dealerRevealed), results: st.results, extraWager: st.extraWager ?? 0 };
+      return { ...base, hands: st.hands, active: st.active, dealer: ended || st.dealerRevealed ? st.dealer : [st.dealer[0]], dealerHidden: !(ended || st.dealerRevealed), results: st.results, extraWager: st.extraWager ?? 0, trollDealer: isTroll ? st.dealer : undefined };
     case "snakes":
       return { ...base, difficulty: st.difficulty, pos: st.pos, rolls: st.rolls, multiplier: L.floor2(st.multiplier) };
     case "crash":
-      return { ...base, startedAt: st.startedAt, serverNow: Date.now(), auto: st.auto, crashPoint: ended ? st.crashPoint : undefined, cashedAt: st.cashedAt };
+      return { ...base, startedAt: st.startedAt, serverNow: Date.now(), auto: st.auto, crashPoint: ended ? st.crashPoint : undefined, cashedAt: st.cashedAt, trollCrashPoint: isTroll ? st.crashPoint : undefined };
   }
   return base;
 }
@@ -270,7 +320,8 @@ export async function sessionStart(userId: string, game: string, wagerIn: number
     } else fail("Finish your current game first");
   }
   const seed = await useNonce(userId);
-  const state: any = { seed, cursor: 0 };
+  const isAdmin = await checkIsAdmin(userId);
+  const state: any = { seed, cursor: 0, trollMode: isAdmin && Boolean(p.trollMode || p.rigged || p.xray) };
   let immediate: ((s: Session) => Promise<any>) | null = null;
   switch (game) {
     case "mines": {
@@ -331,6 +382,7 @@ export async function sessionStart(userId: string, game: string, wagerIn: number
     fail("Finish your current game first");
   }
   const s = data as any as Session;
+  activeSessionsCache.set(`${userId}:${game}`, s);
   if (immediate) return immediate(s);
   return { session: view(s), balance: Number(balanceAfterDebit) };
 }

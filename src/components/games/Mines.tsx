@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Bomb, Gem, Shuffle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bomb, Gem, Shuffle, ShieldAlert } from "lucide-react";
 import { GameLayout, BetInput, StatBox, ResultToast } from "./GameLayout";
 import { useBetAmount, useSession } from "./useGame";
+import { getAdvancedSettings } from "./AdvancedGameSettings";
 import { Button } from "@/components/ui/button";
 import { minesMultiplier } from "@/lib/games/logic";
 import { sfx } from "@/lib/sound";
@@ -17,19 +18,22 @@ export default function Mines() {
   const minePos: number[] = session?.minePositions ?? [];
   const m = active ? session.mines : mines;
 
+  const trollMines: number[] = session?.trollMines ?? [];
+
   async function start() {
-    const r = await begin(Number(bet), { mines });
+    const adv = getAdvancedSettings();
+    const r = await begin(Number(bet), { mines, trollMode: adv.trollMode });
     if (r) sfx.bet();
   }
   async function reveal(t: number) {
-    if (!active || busy || revealed.includes(t)) return;
+    if (!active || revealed.includes(t) || pending === t) return;
     setPending(t);
+    sfx.gem();
     const r = await action("reveal", { tile: t });
     setPending(null);
     if (!r) return;
     if (r.session.status === "lost") sfx.boom();
-    else if (r.session.status === "won") { sfx.gem(); setTimeout(sfx.win, 150); }
-    else sfx.gem();
+    else if (r.session.status === "won") { setTimeout(sfx.win, 150); }
   }
   async function cashout() {
     const r = await action("cashout");
@@ -39,6 +43,23 @@ export default function Mines() {
     const free = Array.from({ length: 25 }, (_, i) => i).filter((i) => !revealed.includes(i));
     void reveal(free[Math.floor(Math.random() * free.length)]);
   }
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      const adv = getAdvancedSettings();
+      if (!adv.hotkeys) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (active && revealed.length > 0) cashout();
+        else if (!active) start();
+      } else if (e.key === "c" || e.key === "C") {
+        if (active && revealed.length > 0) cashout();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [active, revealed.length, start, cashout]);
 
   const ended = session && session.status !== "active";
   return (
@@ -77,6 +98,7 @@ export default function Mines() {
               const isMine = ended && minePos.includes(i);
               const hit = session?.hit === i;
               const showGem = isRev || (ended && !minePos.includes(i));
+              const isTrollMine = !isRev && !ended && trollMines.includes(i);
               return (
                 <button key={i} onClick={() => reveal(i)} disabled={!active || isRev}
                   className={cn("relative aspect-square rounded-xl transition-all duration-200",
@@ -86,6 +108,11 @@ export default function Mines() {
                     ended && !isRev && "bg-background",
                     hit && "bg-destructive/25 ring-2 ring-destructive",
                     pending === i && "animate-pulse")}>
+                  {isTrollMine && (
+                    <span className="absolute inset-0 grid place-items-center opacity-45 pointer-events-none rounded-xl bg-destructive/15 ring-2 ring-destructive/60 animate-pulse z-10">
+                      <img src="/mines-bomb.png" alt="X-Ray Bomb" className="size-[55%] object-contain drop-shadow" />
+                    </span>
+                  )}
                   {(showGem || isMine) && (
                     <span className={cn("absolute inset-0 grid place-items-center animate-pop-in", ended && !isRev && !hit && "opacity-40")}>
                       {isMine ? (

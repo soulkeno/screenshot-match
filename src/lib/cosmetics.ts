@@ -64,7 +64,7 @@ export function getLocalCosmetics(userId: string | null): UserCosmeticsData {
   if (typeof window === "undefined") return DEFAULT_COSMETICS;
   try {
     const key = userId ? `keno:cosmetics:${userId}` : "keno:cosmetics:me";
-    const raw = localStorage.getItem(key) || (userId ? localStorage.getItem("keno:cosmetics:me") : null);
+    const raw = localStorage.getItem(key);
     if (!raw) return DEFAULT_COSMETICS;
     const parsed = JSON.parse(raw);
     const data: UserCosmeticsData = {

@@ -189,10 +189,12 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
       <GamesMenu />
 
       <div ref={box} className="relative hidden w-full max-w-xs md:block">
-        <SnowCap withLights={false} className="-top-2 opacity-85 z-20" />
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground z-10" />
-        <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} placeholder="Search games & players"
-          className="relative h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/60" />
+        <div className="relative overflow-hidden rounded-lg">
+          <SnowCap withLights={false} className="top-0 inset-x-0 opacity-80 z-20" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground z-10" />
+          <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} placeholder="Search games & players"
+            className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/60" />
+        </div>
         {open && q.trim() && (
           <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-card animate-fade-up">
             {games.length > 0 && <p className="px-3 pt-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Games</p>}

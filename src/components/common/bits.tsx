@@ -106,51 +106,50 @@ export function RankTag({ wagered, className }: { wagered: number | string | nul
 
 export function SnowCap({ className, withLights = true }: { className?: string; withLights?: boolean }) {
   return (
-    <div className={cn("pointer-events-none absolute -top-1 left-0 right-0 z-20 overflow-visible leading-none select-none", className)}>
+    <div className={cn("pointer-events-none absolute top-0 left-0 right-0 z-20 overflow-hidden leading-none select-none", className)}>
       <svg
-        viewBox="0 0 100 22"
+        viewBox="0 0 100 16"
         preserveAspectRatio="none"
-        className="h-5 w-full filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
+        className="h-3.5 w-full filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
       >
         <defs>
           <linearGradient id="snowBase" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="65%" stopColor="#f8fafc" />
-            <stop offset="100%" stopColor="#cbd5e1" />
+            <stop offset="70%" stopColor="#f1f5f9" />
+            <stop offset="100%" stopColor="#e2e8f0" />
           </linearGradient>
           <linearGradient id="snowFrost" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.3" />
+            <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.4" />
           </linearGradient>
         </defs>
 
-        {/* Shaded Frost Underlayer with Icicle Drips */}
+        {/* Shaded Frost Underlayer with Organic Soft Drips */}
         <path
-          d="M0,0 L100,0 L100,5 C96,6 94,11 92,11 C90,11 88,6 85,6 C82,6 80,16 77,16 C75,16 73,7 70,7 C67,7 65,13 63,13 C61,13 59,6 56,6 C53,6 50,19 47,19 C45,19 43,8 40,8 C37,8 35,14 33,14 C31,14 29,6 26,6 C23,6 21,17 18,17 C16,17 14,7 11,7 C8,7 6,13 4,13 C2,13 1,6 0,6 Z"
+          d="M0,0 L100,0 L100,3 C96,4 94,7 91,7 C88,7 86,3 83,3 C80,3 78,10 75,10 C72,10 70,4 67,4 C64,4 62,8 59,8 C56,8 54,3 51,3 C48,3 46,11 43,11 C40,11 38,4 35,4 C32,4 30,8 27,8 C24,8 22,3 19,3 C16,3 14,10 11,10 C8,10 6,4 3,4 C1,4 0,3 0,3 Z"
           fill="url(#snowFrost)"
         />
 
-        {/* Fluffy Snow Pillows with Sculpted Organic Icicles */}
+        {/* Fluffy Snow Pillows Draping Over the Top Edge */}
         <path
-          d="M0,0 L100,0 L100,4 C97,5 95,9 93,9 C91,9 89,5 86,5 C83,5 81,14 78,14 C76,14 74,6 71,6 C68,6 66,11 64,11 C62,11 60,5 57,5 C54,5 51,17 48,17 C46,17 44,7 41,7 C38,7 36,12 34,12 C32,12 30,5 27,5 C24,5 22,15 19,15 C17,15 15,6 12,6 C9,6 7,11 5,11 C3,11 2,5 0,5 Z"
+          d="M0,0 L100,0 L100,2.5 C97,3.5 95,6 92,6 C89,6 87,2.5 84,2.5 C81,2.5 79,8.5 76,8.5 C73,8.5 71,3 68,3 C65,3 63,6.5 60,6.5 C57,6.5 55,2.5 52,2.5 C49,2.5 47,9.5 44,9.5 C41,9.5 39,3 36,3 C33,3 31,6.5 28,6.5 C25,6.5 23,2.5 20,2.5 C17,2.5 15,8.5 12,8.5 C9,8.5 7,3 4,3 C2,3 0,2.5 0,2.5 Z"
           fill="url(#snowBase)"
         />
 
-        {/* Snow Sparkles on Drifts */}
-        <circle cx="15" cy="4" r="0.8" fill="#ffffff" />
-        <circle cx="37" cy="5" r="0.7" fill="#ffffff" />
-        <circle cx="61" cy="4" r="0.8" fill="#ffffff" />
-        <circle cx="83" cy="5" r="0.7" fill="#ffffff" />
+        {/* Sparkles */}
+        <circle cx="20" cy="2.5" r="0.6" fill="#ffffff" />
+        <circle cx="48" cy="3" r="0.6" fill="#ffffff" />
+        <circle cx="74" cy="2.5" r="0.6" fill="#ffffff" />
 
         {/* Festive Christmas Bulbs along the snow edge */}
         {withLights && (
           <g>
-            <circle cx="12" cy="7" r="1.2" fill="#ef4444" className="filter drop-shadow-[0_0_3px_#ef4444]" />
-            <circle cx="27" cy="6" r="1.2" fill="#10b981" className="filter drop-shadow-[0_0_3px_#10b981]" />
-            <circle cx="41" cy="8" r="1.2" fill="#eab308" className="filter drop-shadow-[0_0_3px_#eab308]" />
-            <circle cx="57" cy="6" r="1.2" fill="#38bdf8" className="filter drop-shadow-[0_0_3px_#38bdf8]" />
-            <circle cx="71" cy="7" r="1.2" fill="#ec4899" className="filter drop-shadow-[0_0_3px_#ec4899]" />
-            <circle cx="86" cy="6" r="1.2" fill="#eab308" className="filter drop-shadow-[0_0_3px_#eab308]" />
+            <circle cx="12" cy="5" r="1.1" fill="#ef4444" className="filter drop-shadow-[0_0_2px_#ef4444]" />
+            <circle cx="28" cy="4.5" r="1.1" fill="#10b981" className="filter drop-shadow-[0_0_2px_#10b981]" />
+            <circle cx="44" cy="6" r="1.1" fill="#eab308" className="filter drop-shadow-[0_0_2px_#eab308]" />
+            <circle cx="60" cy="4.5" r="1.1" fill="#38bdf8" className="filter drop-shadow-[0_0_2px_#38bdf8]" />
+            <circle cx="76" cy="5.5" r="1.1" fill="#ec4899" className="filter drop-shadow-[0_0_2px_#ec4899]" />
+            <circle cx="92" cy="4.5" r="1.1" fill="#eab308" className="filter drop-shadow-[0_0_2px_#eab308]" />
           </g>
         )}
       </svg>

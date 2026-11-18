@@ -28,16 +28,14 @@ export function Sidebar({ collapsed, onToggle, onNavigate }: { collapsed: boolea
   const Item = ({ to, label, icon: Icon }: { to: string; label: string; icon: React.ComponentType<{ className?: string }> }) => {
     const active = to === "/" ? path === "/" : path.startsWith(to);
     return (
-      <div className="relative">
-        {active && <SnowCap withLights={false} className="-top-1.5 opacity-90 z-10" />}
-        <Link to={to} onClick={onNavigate} title={collapsed ? label : undefined}
-          className={cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
-            active ? "bg-gradient-primary text-primary-foreground shadow-press" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-foreground",
-            collapsed && "justify-center px-0")}>
-          <Icon className={cn("size-[18px] shrink-0", !active && "text-muted-foreground group-hover:text-primary")} />
-          {!collapsed && <span className="truncate">{label}</span>}
-        </Link>
-      </div>
+      <Link to={to} onClick={onNavigate} title={collapsed ? label : undefined}
+        className={cn("group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all overflow-hidden",
+          active ? "bg-gradient-primary text-primary-foreground shadow-press" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-foreground",
+          collapsed && "justify-center px-0")}>
+        {active && <SnowCap withLights={false} className="top-0 inset-x-0" />}
+        <Icon className={cn("size-[18px] shrink-0 relative z-10", !active && "text-muted-foreground group-hover:text-primary")} />
+        {!collapsed && <span className="truncate relative z-10">{label}</span>}
+      </Link>
     );
   };
 

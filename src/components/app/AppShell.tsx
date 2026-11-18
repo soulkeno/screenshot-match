@@ -14,6 +14,7 @@ import { FairnessDialog } from "./FairnessDialog";
 import { CosmeticsDialog } from "./CosmeticsDialog";
 import { LevelUpDialog } from "./LevelUpDialog";
 import { WheelDialog } from "./WheelDialog";
+import { LiveStatsHud } from "./LiveStatsHud";
 import { Logo } from "@/components/common/bits";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -74,6 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <CosmeticsDialog />
       <LevelUpDialog />
       <WheelDialog open={wheelOpen} onOpenChange={setWheelOpen} />
+      <LiveStatsHud />
     </div>
   );
 }
