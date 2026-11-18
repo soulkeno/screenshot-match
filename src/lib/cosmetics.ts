@@ -32,13 +32,13 @@ export const COSMETIC_FONTS: FontItem[] = [
 
 export const COSMETIC_GLOWS: GlowItem[] = [
   { id: "glow-default", name: "Standard", price: 0, className: "", category: "glow" },
-  { id: "glow-aurora", name: "Rainbow Aurora", price: 100000, className: "text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 drop-shadow-[0_0_8px_rgba(216,180,254,0.7)] animate-pulse", category: "glow" },
-  { id: "glow-fire", name: "Inferno Flame", price: 90000, className: "text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-500 to-red-600 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]", category: "glow" },
-  { id: "glow-cyber", name: "Cyber Neon", price: 85000, className: "text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500 drop-shadow-[0_0_10px_rgba(6,182,212,0.85)]", category: "glow" },
-  { id: "glow-gold", name: "Golden Mythic", price: 120000, className: "text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-600 drop-shadow-[0_0_12px_rgba(250,204,21,0.85)]", category: "glow" },
-  { id: "glow-void", name: "Cosmic Void", price: 95000, className: "text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-600 to-indigo-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]", category: "glow" },
-  { id: "glow-emerald", name: "Emerald Glint", price: 80000, className: "text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-green-400 to-teal-500 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]", category: "glow" },
-  { id: "glow-ice", name: "Glacial Frost", price: 85000, className: "text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-blue-400 drop-shadow-[0_0_10px_rgba(186,230,253,0.9)]", category: "glow" },
+  { id: "glow-aurora", name: "Rainbow Aurora", price: 100000, className: "!text-transparent !bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 drop-shadow-[0_0_12px_rgba(216,180,254,0.95)] animate-pulse font-black", category: "glow" },
+  { id: "glow-fire", name: "Inferno Flame", price: 90000, className: "!text-transparent !bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-500 to-red-600 drop-shadow-[0_0_14px_rgba(249,115,22,0.95)] font-black", category: "glow" },
+  { id: "glow-cyber", name: "Cyber Neon", price: 85000, className: "!text-transparent !bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500 drop-shadow-[0_0_14px_rgba(6,182,212,0.95)] font-black", category: "glow" },
+  { id: "glow-gold", name: "Golden Mythic", price: 120000, className: "!text-transparent !bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-600 drop-shadow-[0_0_16px_rgba(250,204,21,0.95)] font-black", category: "glow" },
+  { id: "glow-void", name: "Cosmic Void", price: 95000, className: "!text-transparent !bg-clip-text bg-gradient-to-r from-violet-400 via-purple-600 to-indigo-400 drop-shadow-[0_0_14px_rgba(168,85,247,0.95)] font-black", category: "glow" },
+  { id: "glow-emerald", name: "Emerald Glint", price: 80000, className: "!text-transparent !bg-clip-text bg-gradient-to-r from-emerald-300 via-green-400 to-teal-500 drop-shadow-[0_0_14px_rgba(52,211,153,0.95)] font-black", category: "glow" },
+  { id: "glow-ice", name: "Glacial Frost", price: 85000, className: "!text-transparent !bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-blue-400 drop-shadow-[0_0_16px_rgba(186,230,253,1)] font-black", category: "glow" },
 ];
 
 export interface UserCosmeticsData {
@@ -57,30 +57,61 @@ const DEFAULT_COSMETICS: UserCosmeticsData = {
   },
 };
 
+// Global memory cache for all users
+const memoryCache = new Map<string, UserCosmeticsData>();
+
 export function getLocalCosmetics(userId: string | null): UserCosmeticsData {
-  if (!userId) return DEFAULT_COSMETICS;
+  if (typeof window === "undefined") return DEFAULT_COSMETICS;
   try {
-    const raw = localStorage.getItem(`keno:cosmetics:${userId}`);
+    const key = userId ? `keno:cosmetics:${userId}` : "keno:cosmetics:me";
+    const raw = localStorage.getItem(key) || (userId ? localStorage.getItem("keno:cosmetics:me") : null);
     if (!raw) return DEFAULT_COSMETICS;
     const parsed = JSON.parse(raw);
-    return {
+    const data: UserCosmeticsData = {
       owned: Array.isArray(parsed.owned) ? Array.from(new Set([...DEFAULT_COSMETICS.owned, ...parsed.owned])) : DEFAULT_COSMETICS.owned,
       equipped: {
         font: parsed.equipped?.font ?? "font-default",
         glow: parsed.equipped?.glow ?? "glow-default",
       },
     };
+    if (userId) memoryCache.set(userId, data);
+    return data;
   } catch {
     return DEFAULT_COSMETICS;
   }
 }
 
 export function saveLocalCosmetics(userId: string | null, data: UserCosmeticsData) {
-  if (!userId) return;
+  if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(`keno:cosmetics:${userId}`, JSON.stringify(data));
+    if (userId) {
+      localStorage.setItem(`keno:cosmetics:${userId}`, JSON.stringify(data));
+      memoryCache.set(userId, data);
+    }
+    // Always keep active local profile up to date
+    localStorage.setItem("keno:cosmetics:me", JSON.stringify(data));
     window.dispatchEvent(new CustomEvent("keno:cosmetics-change", { detail: { userId, data } }));
   } catch {}
+}
+
+export function resolveFontFamily(val: string | null | undefined): string | undefined {
+  if (!val || val === "font-default" || val === "inherit") return undefined;
+  // If already a CSS fontFamily string
+  if (val.includes("'") || val.includes('"') || val.includes(",") || val.includes("sans-serif") || val.includes("serif") || val.includes("monospace") || val.includes("cursive")) {
+    return val;
+  }
+  const item = COSMETIC_FONTS.find((f) => f.id === val);
+  return item && item.fontFamily !== "inherit" ? item.fontFamily : undefined;
+}
+
+export function resolveGlowClass(val: string | null | undefined): string {
+  if (!val || val === "glow-default") return "";
+  // If already a CSS class string with gradient or shadow
+  if (val.includes("bg-clip-text") || val.includes("drop-shadow") || val.includes("from-") || val.includes("text-transparent")) {
+    return val;
+  }
+  const item = COSMETIC_GLOWS.find((g) => g.id === val);
+  return item ? item.className : "";
 }
 
 export function useCosmetics(userId: string | null) {
@@ -90,7 +121,7 @@ export function useCosmetics(userId: string | null) {
     setData(getLocalCosmetics(userId));
     const handle = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (!detail || detail.userId === userId) {
+      if (!detail || !userId || detail.userId === userId || detail.userId === "me") {
         setData(getLocalCosmetics(userId));
       }
     };
@@ -130,6 +161,8 @@ export function useCosmetics(userId: string | null) {
 
   return {
     ...data,
+    fontFamily: resolveFontFamily(data.equipped.font),
+    glowClass: resolveGlowClass(data.equipped.glow),
     equip,
     addOwned,
     isOwned: (id: string) => data.owned.includes(id),
@@ -137,28 +170,12 @@ export function useCosmetics(userId: string | null) {
   };
 }
 
-export function getFrameUrl(_frameId?: string | null): null {
-  return null;
-}
-
-export function getFontFamily(fontId: string | null | undefined): string {
-  if (!fontId) return "inherit";
-  const item = COSMETIC_FONTS.find((f) => f.id === fontId);
-  return item ? item.fontFamily : "inherit";
-}
-
-export function getGlowClass(glowId: string | null | undefined): string {
-  if (!glowId) return "";
-  const item = COSMETIC_GLOWS.find((g) => g.id === glowId);
-  return item ? item.className : "";
-}
-
 export function getEquippedStyles(userId: string | null) {
   const data = getLocalCosmetics(userId);
   return {
     frameUrl: null,
-    fontFamily: getFontFamily(data.equipped.font),
-    glowClass: getGlowClass(data.equipped.glow),
+    fontFamily: resolveFontFamily(data.equipped.font),
+    glowClass: resolveGlowClass(data.equipped.glow),
   };
 }
 
@@ -166,7 +183,7 @@ export function useEquippedStyles(userId: string | null) {
   const { equipped } = useCosmetics(userId);
   return {
     frameUrl: null,
-    fontFamily: getFontFamily(equipped.font),
-    glowClass: getGlowClass(equipped.glow),
+    fontFamily: resolveFontFamily(equipped.font),
+    glowClass: resolveGlowClass(equipped.glow),
   };
 }

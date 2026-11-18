@@ -39,7 +39,7 @@ export default function MinesDuel() {
       }>
         <div className="flex h-full min-h-[420px] items-center justify-center p-6">
           {current ? <DuelBoard g={current} me={userId} onChange={reload} onClose={() => setWatch(null)} /> : (
-            <div className="text-center text-muted-foreground"><Bomb className="mx-auto size-16 opacity-40" /><p className="mt-4 text-sm">Open a duel or take one below.</p></div>
+            <div className="text-center text-muted-foreground"><img src="/mines-bomb.png" alt="Bomb" className="mx-auto size-20 object-contain drop-shadow" /><p className="mt-4 text-sm">Open a duel or take one below.</p></div>
           )}
         </div>
       </GameLayout>
@@ -48,7 +48,7 @@ export default function MinesDuel() {
         {games.length === 0 && <p className="panel p-6 text-center text-sm text-muted-foreground">No duels yet. Open the first one!</p>}
         {games.map((g) => (
           <LobbyRow key={g.id} g={g} me={userId} busy={busy} onJoin={async () => { const r = await join(g.id); if (r) setWatch(g.id); }} onCancel={() => void cancel(g.id)} onOpen={() => setWatch(g.id)}>
-            <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground"><Bomb className="size-3.5" />{(g.config as any)?.mines} mines</span>
+            <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><img src="/mines-bomb.png" alt="Bomb" className="size-4 object-contain inline" />{(g.config as any)?.mines} mines</span>
           </LobbyRow>
         ))}
       </div>
@@ -104,7 +104,13 @@ function DuelBoard({ g, me, onChange, onClose }: { g: PvpGame; me: string | null
               className={cn("grid aspect-square place-items-center rounded-lg border transition-all",
                 r ? (r.mine ? "border-destructive bg-destructive/25 animate-pop-in" : r.by === g.creator_id ? "border-primary/50 bg-primary/15 animate-pop-in" : "border-accent/50 bg-accent/15 animate-pop-in")
                   : isMine ? "border-destructive/40 bg-destructive/10 opacity-70" : "border-border bg-surface-2 enabled:hover:-translate-y-0.5 enabled:hover:border-primary/50")}>
-              {pending === i ? <Loader2 className="size-5 animate-spin" /> : isMine ? <Bomb className="size-6 text-destructive" /> : r ? <Gem className={cn("size-6", r.by === g.creator_id ? "text-primary" : "text-accent")} /> : null}
+              {pending === i ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : isMine ? (
+                <img src="/mines-bomb.png" alt="Bomb" className="size-7 object-contain drop-shadow-[0_2px_8px_rgba(239,68,68,0.7)] animate-pop-in" />
+              ) : r ? (
+                <img src="/mines-gem.png" alt="Gem" className="size-7 object-contain drop-shadow-[0_2px_8px_rgba(250,204,21,0.8)] animate-pop-in" />
+              ) : null}
             </button>
           );
         })}

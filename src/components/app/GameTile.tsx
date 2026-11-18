@@ -24,6 +24,7 @@ const GAME_COVERS: Record<string, string> = {
   keno: "/games/keno.jpg",
   hilo: "/games/hilo.jpg",
   "pvp-coinflip": "/games/pvp-coinflip.jpg",
+  slots: "https://bgaming.com/wp-content/uploads/2025/07/tg_image_3398176289-1-1-420x228.webp",
 };
 
 export function GameTile({ g }: { g: GameMeta }) {

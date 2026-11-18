@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Dice5, Rocket, Bomb, Castle, CircleDot, TrendingUp, Grid3x3, ArrowUpDown, Spade, Club, Disc3, Coins,
-  ArrowBigUpDash, Worm, Scissors, Package, Cherry, Swords, Boxes, Users,
+  ArrowBigUpDash, Worm, Scissors, Package, Cherry, Swords, Boxes, Users, Plane,
 } from "lucide-react";
 
 export type GameCategory = "originals" | "pvp" | "slots";
@@ -31,7 +31,7 @@ export const GAMES: GameMeta[] = [
   { slug: "snakes", name: "Snakes", category: "originals", tone: "tone-green", icon: Worm, blurb: "Roll the dice, avoid the snakes" },
   { slug: "rps", name: "Rock Paper Scissors", category: "originals", tone: "tone-slate", icon: Scissors, blurb: "Beat the house, 1.96×" },
   { slug: "cases", name: "Cases", category: "originals", tone: "tone-blue", icon: Package, blurb: "Unbox loot worth up to 100×" },
-  { slug: "slots", name: "Keno Slots", category: "slots", tone: "tone-red", icon: Cherry, blurb: "5 reels, 10 lines, up to 1000×" },
+  { slug: "slots", name: "Aviamasters", category: "slots", tone: "tone-cyan", icon: Plane, blurb: "Aviamasters by BGaming with Keno Coins" },
   { slug: "pvp-coinflip", name: "PVP Coinflip", category: "pvp", tone: "tone-gold", icon: Swords, blurb: "Flip against another player" },
   { slug: "mines-duel", name: "Mines Duel", category: "pvp", tone: "tone-red", icon: Users, blurb: "One board, two players, one mine too many" },
   { slug: "case-battles", name: "Case Battles", category: "pvp", tone: "tone-magenta", icon: Boxes, blurb: "Open cases head to head, winner takes all" },

@@ -185,7 +185,7 @@ export function LeaderboardPage() {
 
                   <div className="col-span-6 sm:col-span-5 flex items-center gap-2.5 min-w-0">
                     <UserAvatar name={p.username} url={p.avatar_url} size={30} />
-                    <span className="truncate font-semibold text-sm hover:underline">{p.username}</span>
+                    <UserName userId={p.id} name={p.username} className="truncate font-semibold text-sm hover:underline" />
                     {p.is_vip && <VipTag />}
                     {isMe && (
                       <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[10px] font-bold uppercase text-primary">
@@ -292,7 +292,7 @@ function PodiumCard({
           )}
         </div>
 
-        <p className="font-bold text-sm truncate max-w-[130px]">{player ? player.username : "Empty"}</p>
+        <UserName userId={player?.id} name={player ? player.username : "Empty"} className="font-bold text-sm truncate max-w-[130px]" />
 
         {player && (
           <span

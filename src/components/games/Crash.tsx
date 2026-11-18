@@ -6,7 +6,7 @@ import { GameLayout, BetInput, StatBox } from "./GameLayout";
 import { useBetAmount } from "./useGame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Amount, Coin, UserAvatar } from "@/components/common/bits";
+import { Amount, Coin, UserAvatar, UserName } from "@/components/common/bits";
 import { useApp } from "@/lib/app-context";
 import { crashStateFn, crashBetFn, crashCashoutFn } from "@/lib/games.functions";
 import { CRASH_RATE, crashMultAt } from "@/lib/games/logic";
@@ -326,7 +326,7 @@ export default function Crash() {
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <UserAvatar name={b.username} size={20} />
-                    <span className="truncate font-semibold max-w-[110px]">{b.username}</span>
+                    <UserName userId={b.userId} name={b.username} className="truncate font-semibold max-w-[110px]" />
                   </div>
                   <div className="flex items-center gap-2 tabular text-right">
                     <Amount value={b.wager} compact className="text-muted-foreground" />

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useApp } from "@/lib/app-context";
 import { GAME_BY_SLUG, gameName } from "@/lib/games/registry";
-import { Amount, RankIcon, SectionTitle } from "@/components/common/bits";
+import { Amount, RankIcon, SectionTitle, UserName } from "@/components/common/bits";
 import { cn } from "@/lib/utils";
 
 type Bet = Tables<"bets">;
@@ -40,7 +40,7 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
                 {showPlayer && (
                   <td className="px-4 py-2.5">
                     <button onClick={() => openProfile(b.user_id)} className="flex items-center gap-1.5 font-medium hover:text-primary">
-                      <RankIcon wagered={b.user_wagered} size={18} />{b.username}
+                      <RankIcon wagered={b.user_wagered} size={18} /><UserName userId={b.user_id} name={b.username} />
                     </button>
                   </td>
                 )}

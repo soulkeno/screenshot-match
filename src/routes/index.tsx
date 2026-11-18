@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Flame, Swords, Cherry } from "lucide-react";
+import { Flame, Swords, Plane } from "lucide-react";
 import { GAMES } from "@/lib/games/registry";
 import { GameGrid } from "@/components/app/GameTile";
 import { LiveBets } from "@/components/app/LiveBets";
@@ -51,7 +51,7 @@ function Home() {
       </div>
       <section className="mt-8"><SectionTitle icon={Flame}>Keno Originals</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "originals" && g.slug !== "baccarat")} /></section>
       <section className="mt-8"><SectionTitle icon={Swords}>Player vs Player</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "pvp")} /></section>
-      <section className="mt-8"><SectionTitle icon={Cherry}>Slots</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "slots")} /></section>
+      <section className="mt-8"><SectionTitle icon={Plane}>Aviamasters & Slots</SectionTitle><GameGrid games={GAMES.filter((g) => g.category === "slots")} /></section>
       <LiveBets />
     </div>
   );

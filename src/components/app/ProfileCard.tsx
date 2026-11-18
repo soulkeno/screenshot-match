@@ -83,7 +83,7 @@ function ProfileBody({ p, bets, canAdmin, onClose }: { p: Tables<"profiles">; be
           />
           <div className="pb-1">
             <div className="flex items-center gap-2">
-              <UserName name={p.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-xl font-bold" />
+              <UserName userId={p.id} name={p.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-xl font-bold" />
               {p.is_vip && <VipTag />}
             </div>
             <p className="flex items-center gap-1 text-xs text-muted-foreground"><Calendar className="size-3" /> Joined {new Date(p.created_at).toLocaleDateString()}</p>

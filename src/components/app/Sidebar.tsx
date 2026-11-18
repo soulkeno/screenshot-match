@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Star, History, Trophy, BarChart3, Gift, Percent, Crown, ShieldCheck, ChevronsLeft, ChevronsRight, Vault, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/lib/app-context";
-import { Logo, RankIcon } from "@/components/common/bits";
+import { Logo, RankIcon, SnowCap } from "@/components/common/bits";
 import { rankProgress } from "@/lib/ranks";
 import { fmtCompact } from "@/lib/format";
 
@@ -28,13 +28,16 @@ export function Sidebar({ collapsed, onToggle, onNavigate }: { collapsed: boolea
   const Item = ({ to, label, icon: Icon }: { to: string; label: string; icon: React.ComponentType<{ className?: string }> }) => {
     const active = to === "/" ? path === "/" : path.startsWith(to);
     return (
-      <Link to={to} onClick={onNavigate} title={collapsed ? label : undefined}
-        className={cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-          active ? "bg-gradient-primary text-primary-foreground shadow-press" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-foreground",
-          collapsed && "justify-center px-0")}>
-        <Icon className={cn("size-[18px] shrink-0", !active && "text-muted-foreground group-hover:text-primary")} />
-        {!collapsed && <span className="truncate">{label}</span>}
-      </Link>
+      <div className="relative">
+        {active && <SnowCap withLights={false} className="-top-1.5 opacity-90 z-10" />}
+        <Link to={to} onClick={onNavigate} title={collapsed ? label : undefined}
+          className={cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
+            active ? "bg-gradient-primary text-primary-foreground shadow-press" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-foreground",
+            collapsed && "justify-center px-0")}>
+          <Icon className={cn("size-[18px] shrink-0", !active && "text-muted-foreground group-hover:text-primary")} />
+          {!collapsed && <span className="truncate">{label}</span>}
+        </Link>
+      </div>
     );
   };
 

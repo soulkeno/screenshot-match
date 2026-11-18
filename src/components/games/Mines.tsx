@@ -88,7 +88,22 @@ export default function Mines() {
                     pending === i && "animate-pulse")}>
                   {(showGem || isMine) && (
                     <span className={cn("absolute inset-0 grid place-items-center animate-pop-in", ended && !isRev && !hit && "opacity-40")}>
-                      {isMine ? <Bomb className="size-1/2 text-destructive drop-shadow" /> : <Gem className="size-1/2 text-success drop-shadow" />}
+                      {isMine ? (
+                        <img
+                          src="/mines-bomb.png"
+                          alt="Bomb"
+                          className={cn(
+                            "size-[65%] object-contain drop-shadow-[0_4px_10px_rgba(239,68,68,0.7)] animate-pop-in",
+                            hit && "animate-shake scale-110"
+                          )}
+                        />
+                      ) : (
+                        <img
+                          src="/mines-gem.png"
+                          alt="Gem"
+                          className="size-[65%] object-contain drop-shadow-[0_4px_10px_rgba(250,204,21,0.8)] animate-pop-in"
+                        />
+                      )}
                     </span>
                   )}
                 </button>

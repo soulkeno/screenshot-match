@@ -4,7 +4,7 @@ import { Menu, Search, Settings, MessageSquare, Vault, Loader2, Gamepad2, Chevro
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/lib/app-context";
 import { GAMES } from "@/lib/games/registry";
-import { Amount, RankIcon, UserAvatar, UserName } from "@/components/common/bits";
+import { Amount, RankIcon, UserAvatar, UserName, SnowCap } from "@/components/common/bits";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -189,9 +189,10 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
       <GamesMenu />
 
       <div ref={box} className="relative hidden w-full max-w-xs md:block">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <SnowCap withLights={false} className="-top-2 opacity-85 z-20" />
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground z-10" />
         <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} placeholder="Search games & players"
-          className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/60" />
+          className="relative h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/60" />
         {open && q.trim() && (
           <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-card animate-fade-up">
             {games.length > 0 && <p className="px-3 pt-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Games</p>}
@@ -207,7 +208,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             {players.map((p) => (
               <button key={p.id} onClick={() => { setOpen(false); setQ(""); openProfile(p.id); }} className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-surface-2">
                 <UserAvatar name={p.username} url={p.avatar_url} size={28} />
-                <span className="flex-1 font-medium">{p.username}</span>
+                <UserName userId={p.id} name={p.username} className="flex-1 font-medium truncate" />
                 <RankIcon wagered={p.total_wagered} size={20} />
               </button>
             ))}
@@ -248,7 +249,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
               <div className="flex items-center gap-3 p-2.5 border-b border-border/60 pb-3 mb-1">
                 <UserAvatar name={profile.username} url={profile.avatar_url} size={40} />
                 <div className="min-w-0 flex-1">
-                  <UserName name={profile.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-sm font-bold truncate block" />
+                  <UserName userId={profile.id} name={profile.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-sm font-bold truncate block" />
                   <p className="text-[11px] text-muted-foreground truncate">Player Profile</p>
                 </div>
               </div>
