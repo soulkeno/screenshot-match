@@ -14,6 +14,7 @@ export default function Mines() {
   const [mines, setMines] = useState(3);
   const { session, busy, begin, action, active } = useSession("mines");
   const [pending, setPending] = useState<number | null>(null);
+  const [peeking, setPeeking] = useState(false);
   const revealed: number[] = session?.revealed ?? [];
   const minePos: number[] = session?.minePositions ?? [];
   const m = active ? session.mines : mines;
@@ -45,10 +46,17 @@ export default function Mines() {
   }
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      const adv = getAdvancedSettings();
-      if (!adv.hotkeys) return;
+    const handleDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const adv = getAdvancedSettings();
+
+      // Secret X-Ray peek keybind (e.g. hold "X" to reveal, release to hide)
+      if (e.key.toLowerCase() === adv.trollKey.toLowerCase()) {
+        setPeeking(true);
+        return;
+      }
+
+      if (!adv.hotkeys) return;
       if (e.code === "Space") {
         e.preventDefault();
         if (active && revealed.length > 0) cashout();
@@ -57,8 +65,20 @@ export default function Mines() {
         if (active && revealed.length > 0) cashout();
       }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+
+    const handleUp = (e: KeyboardEvent) => {
+      const adv = getAdvancedSettings();
+      if (e.key.toLowerCase() === adv.trollKey.toLowerCase()) {
+        setPeeking(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleDown);
+    window.addEventListener("keyup", handleUp);
+    return () => {
+      window.removeEventListener("keydown", handleDown);
+      window.removeEventListener("keyup", handleUp);
+    };
   }, [active, revealed.length, start, cashout]);
 
   const ended = session && session.status !== "active";
@@ -98,7 +118,7 @@ export default function Mines() {
               const isMine = ended && minePos.includes(i);
               const hit = session?.hit === i;
               const showGem = isRev || (ended && !minePos.includes(i));
-              const isTrollMine = !isRev && !ended && trollMines.includes(i);
+              const isTrollMine = peeking && !isRev && !ended && trollMines.includes(i);
               return (
                 <button key={i} onClick={() => reveal(i)} disabled={!active || isRev}
                   className={cn("relative aspect-square rounded-xl transition-all duration-200",

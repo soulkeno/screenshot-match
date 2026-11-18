@@ -25,6 +25,7 @@ export default function Blackjack() {
   const { session, busy, begin, action, active } = useSession("blackjack");
   const prevCount = useRef(0);
   const [flash, setFlash] = useState<string | null>(null);
+  const [peeking, setPeeking] = useState(false);
 
   const hands: HandT[] = session?.hands ?? [];
   const dealer: Card[] = session?.dealer ?? [];
@@ -58,10 +59,16 @@ export default function Blackjack() {
   const canSplit = cur && hands.length === 1 && cur.cards.length === 2 && Math.min(10, cur.cards[0].rank) === Math.min(10, cur.cards[1].rank);
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      const adv = getAdvancedSettings();
-      if (!adv.hotkeys) return;
+    const handleDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const adv = getAdvancedSettings();
+
+      if (e.key.toLowerCase() === adv.trollKey.toLowerCase()) {
+        setPeeking(true);
+        return;
+      }
+
+      if (!adv.hotkeys) return;
       if (e.code === "Space") {
         e.preventDefault();
         if (!active && !busy) deal();
@@ -73,8 +80,20 @@ export default function Blackjack() {
         if (active && !busy && canDouble) action("double");
       }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+
+    const handleUp = (e: KeyboardEvent) => {
+      const adv = getAdvancedSettings();
+      if (e.key.toLowerCase() === adv.trollKey.toLowerCase()) {
+        setPeeking(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleDown);
+    window.addEventListener("keyup", handleUp);
+    return () => {
+      window.removeEventListener("keydown", handleDown);
+      window.removeEventListener("keyup", handleUp);
+    };
   }, [active, busy, canDouble, deal]);
 
   return (
@@ -119,7 +138,7 @@ export default function Blackjack() {
               {session?.dealerHidden && (
                 <div className="relative">
                   <PlayingCard key="hole" card={null} delay={480} from={SHOE_DEALER} />
-                  {session?.trollDealer?.[1] && (
+                  {session?.trollDealer?.[1] && peeking && (
                     <div className="absolute inset-0 grid place-items-center rounded-xl bg-destructive/10 ring-2 ring-destructive/60 p-1 pointer-events-none z-10">
                       <div className="scale-75 opacity-80">
                         <PlayingCard card={session.trollDealer[1]} delay={0} />

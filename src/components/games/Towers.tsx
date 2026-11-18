@@ -17,6 +17,7 @@ export default function Towers() {
   const { cols } = TOWERS[d];
   const level: number = session?.level ?? 0;
   const picks: number[] = session?.picks ?? [];
+  const [peeking, setPeeking] = useState(false);
   const layout: number[][] | undefined = session?.layout;
   const trollLayout: number[][] | undefined = session?.trollLayout;
   const ended = session && session.status !== "active";
@@ -41,10 +42,17 @@ export default function Towers() {
   }
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      const adv = getAdvancedSettings();
-      if (!adv.hotkeys) return;
+    const handleDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const adv = getAdvancedSettings();
+
+      // Secret X-Ray peek keybind (e.g. hold "X" to reveal traps, release to hide)
+      if (e.key.toLowerCase() === adv.trollKey.toLowerCase()) {
+        setPeeking(true);
+        return;
+      }
+
+      if (!adv.hotkeys) return;
       if (e.code === "Space") {
         e.preventDefault();
         if (active && level > 0) cashout();
@@ -58,8 +66,20 @@ export default function Towers() {
         }
       }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+
+    const handleUp = (e: KeyboardEvent) => {
+      const adv = getAdvancedSettings();
+      if (e.key.toLowerCase() === adv.trollKey.toLowerCase()) {
+        setPeeking(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleDown);
+    window.addEventListener("keyup", handleUp);
+    return () => {
+      window.removeEventListener("keydown", handleDown);
+      window.removeEventListener("keyup", handleUp);
+    };
   }, [active, level, cols, start, cashout]);
 
   return (
@@ -99,7 +119,7 @@ export default function Towers() {
                         chosen && passed && "ring-2 ring-success/60",
                         chosen && ended && bad && "bg-destructive/25 ring-2 ring-destructive",
                         ended && !chosen && "opacity-50")}>
-                      {isCurrent && trollLayout?.[l]?.includes(c) && (
+                      {isCurrent && peeking && trollLayout?.[l]?.includes(c) && (
                         <span className="absolute inset-0 grid place-items-center opacity-45 pointer-events-none rounded-lg bg-destructive/15 ring-1 ring-destructive/60 animate-pulse z-10">
                           <img src="/mines-bomb.png" alt="Trap" className="size-4 object-contain" />
                         </span>
