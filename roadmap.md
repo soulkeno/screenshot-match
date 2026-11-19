@@ -15,4 +15,4 @@
 - [ ] Rank-up animation in the middle of the screen (winged crest style)
 - [ ] Leaderboard redesign: "Daily race" podium (top 5) + table, no prizes
 - [ ] Crash: shared server rounds everyone joins
-- [ ] URGENT: Mines/Towers progress resets after clicking tiles
+- [x] URGENT: Mines/Towers progress resets after clicking tiles

@@ -206,7 +206,7 @@ type Session = { id: string; user_id: string; game: string; wager: number; state
 const SESSION_GAMES = ["mines", "towers", "hilo", "blackjack", "snakes"]; // crash now runs as shared rounds in features.server.ts
 
 // Fast in-memory cache for ultra-low latency tile reveals and actions
-const activeSessionsCache = new Map<string, Session>();
+
 
 async function checkIsAdmin(userId: string): Promise<boolean> {
   try {
@@ -218,30 +218,15 @@ async function checkIsAdmin(userId: string): Promise<boolean> {
 }
 
 async function getActive(userId: string, game: string): Promise<Session | null> {
-  const key = `${userId}:${game}`;
-  const cached = activeSessionsCache.get(key);
-  if (cached && cached.status === "active") return cached;
-
+  // Always read from the database: workers are stateless, so an in-memory cache serves stale boards.
   const { data } = await db.from("game_sessions").select("*").eq("user_id", userId).eq("game", game).eq("status", "active").maybeSingle();
-  if (data) {
-    const s = data as any as Session;
-    activeSessionsCache.set(key, s);
-    return s;
-  }
-  return null;
+  return (data as any) ?? null;
 }
 
 async function saveState(s: Session, status = "active") {
   s.status = status;
-  const key = `${s.user_id}:${s.game}`;
-  if (status === "active") {
-    activeSessionsCache.set(key, s);
-    // Asynchronous non-blocking save for maximum gameplay speed
-    void db.from("game_sessions").update({ state: s.state, status, updated_at: new Date().toISOString() }).eq("id", s.id);
-  } else {
-    activeSessionsCache.delete(key);
-    await db.from("game_sessions").update({ state: s.state, status, updated_at: new Date().toISOString() }).eq("id", s.id);
-  }
+  const { error } = await db.from("game_sessions").update({ state: s.state, status, updated_at: new Date().toISOString() }).eq("id", s.id);
+  if (error) fail("Could not save your game, try again");
 }
 
 async function cursorFloat(s: Session, count: number) {
@@ -382,7 +367,6 @@ export async function sessionStart(userId: string, game: string, wagerIn: number
     fail("Finish your current game first");
   }
   const s = data as any as Session;
-  activeSessionsCache.set(`${userId}:${game}`, s);
   if (immediate) return immediate(s);
   return { session: view(s), balance: Number(balanceAfterDebit) };
 }
