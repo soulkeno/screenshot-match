@@ -231,7 +231,7 @@ function ChatLine({ m, avatar, mine, onUser }: { m: Msg; avatar: string | null; 
 }
 
 function RainCard() {
-  const { userId } = useApp();
+  const { userId, isAdmin } = useApp();
   const [rain, setRain] = useState<Rain | null>(null);
   const [joined, setJoined] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -275,6 +275,16 @@ function RainCard() {
     toast.success("You joined the rain!");
   }
 
+  async function cancel() {
+    if (!window.confirm("Cancel this rain? Everyone who joined gets their coins back.")) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("cancel_rain", { p_rain: rain!.id });
+    setBusy(false);
+    if (error) return toast.error(errMsg(error));
+    setRain(null);
+    toast.success("Rain cancelled — everyone was refunded.");
+  }
+
   return (
     <div className="mx-3 mt-3 overflow-hidden rounded-xl border border-accent/30 bg-gradient-to-br from-accent/15 to-surface p-3 animate-fade-up">
       <div className="flex items-center gap-3">
@@ -289,7 +299,19 @@ function RainCard() {
       </div>
       <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1"><Timer className="size-3" />{left > 0 ? `${timeLeft(left)} until it ends` : "Splitting..."}</span>
-        <span className="flex items-center gap-1"><Users className="size-3" />{rain.participants} joined</span>
+        <span className="flex items-center gap-2">
+          <span className="flex items-center gap-1"><Users className="size-3" />{rain.participants} joined</span>
+          {(isHost || isAdmin) && left > 0 && (
+            <button
+              onClick={cancel}
+              disabled={busy}
+              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+              aria-label="Cancel rain"
+            >
+              <X className="size-3" /> Cancel
+            </button>
+          )}
+        </span>
       </div>
     </div>
   );

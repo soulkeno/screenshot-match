@@ -29,6 +29,13 @@
       "when": 1795077367055,
       "tag": "0003_rain_custom_duration",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795077515079,
+      "tag": "0004_cancel_rain_refund",
+      "breakpoints": true
     }
   ]
 }

@@ -796,6 +796,7 @@ export type Database = {
       admin_unban: { Args: { p_user: string }; Returns: undefined }
       assert_admin: { Args: never; Returns: undefined }
       assert_not_banned: { Args: { p_user: string }; Returns: undefined }
+      cancel_rain: { Args: { p_rain: string }; Returns: undefined }
       claim_daily: { Args: never; Returns: number }
       claim_rakeback: { Args: never; Returns: number }
       daily_race: {
