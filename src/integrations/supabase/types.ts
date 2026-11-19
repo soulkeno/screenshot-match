@@ -859,7 +859,9 @@ export type Database = {
         }
         Returns: number
       }
-      start_rain: { Args: { p_amount: number }; Returns: string }
+      start_rain:
+        | { Args: { p_amount: number }; Returns: string }
+        | { Args: { p_amount: number; p_minutes: number }; Returns: string }
       username_available: { Args: { p_name: string }; Returns: boolean }
       vault_accrue: { Args: { p_user: string }; Returns: number }
       vault_collect: { Args: never; Returns: number }

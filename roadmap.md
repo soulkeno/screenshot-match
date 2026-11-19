@@ -16,3 +16,4 @@
 - [ ] Leaderboard redesign: "Daily race" podium (top 5) + table, no prizes
 - [ ] Crash: shared server rounds everyone joins
 - [x] URGENT: Mines/Towers progress resets after clicking tiles
+- [x] Rain: custom duration when starting a rain

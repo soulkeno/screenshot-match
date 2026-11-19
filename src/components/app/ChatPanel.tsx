@@ -298,11 +298,15 @@ function RainCard() {
 function StartRainDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { balance } = useApp();
   const [amount, setAmount] = useState("10000");
+  const [minutes, setMinutes] = useState("15");
   const [busy, setBusy] = useState(false);
+  const mins = Math.floor(Number(minutes));
+  const minsOk = mins >= 1 && mins <= 1440;
   async function start() {
     const a = Number(amount);
+    if (!minsOk) return toast.error("Rain length must be between 1 minute and 24 hours");
     setBusy(true);
-    const { error } = await supabase.rpc("start_rain", { p_amount: a });
+    const { error } = await supabase.rpc("start_rain", { p_amount: a, p_minutes: mins });
     setBusy(false);
     if (error) return toast.error(errMsg(error));
     toast.success("Rain started! 🌧️");
@@ -313,7 +317,7 @@ function StartRainDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
       <DialogContent className="border-border bg-popover sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><CloudRain className="size-5 text-accent" /> Start a rain</DialogTitle>
-          <DialogDescription>Your coins are split evenly between everyone who joins in the next 15 minutes. If a rain is already running, your coins are added to its pot.</DialogDescription>
+          <DialogDescription>Your coins are split evenly between everyone who joins before it ends. If a rain is already running, your coins are added to its pot and it keeps its end time.</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           <Input type="number" min={1000} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-11 bg-surface" />
@@ -324,7 +328,17 @@ function StartRainDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
           </div>
           <p className="text-xs text-muted-foreground">Balance: {fmt(balance)} · Minimum 1,000</p>
         </div>
-        <Button variant="accent" size="lg" onClick={start} disabled={busy || Number(amount) < 1000}>{busy && <Loader2 className="animate-spin" />} Make it rain</Button>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold">Duration (minutes)</p>
+          <Input type="number" min={1} max={1440} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-11 bg-surface" aria-label="Rain duration in minutes" />
+          <div className="flex gap-2">
+            {[[1, "1m"], [5, "5m"], [15, "15m"], [60, "1h"], [360, "6h"]].map(([v, l]) => (
+              <button key={v} onClick={() => setMinutes(String(v))} className={cn("flex-1 rounded-md border bg-surface py-1.5 text-xs font-semibold hover:border-primary/50", mins === v ? "border-primary" : "border-border")}>{l}</button>
+            ))}
+          </div>
+          <p className={cn("text-xs", minsOk ? "text-muted-foreground" : "text-destructive")}>From 1 minute up to 24 hours (1440 minutes)</p>
+        </div>
+        <Button variant="accent" size="lg" onClick={start} disabled={busy || Number(amount) < 1000 || !minsOk}>{busy && <Loader2 className="animate-spin" />} Make it rain</Button>
       </DialogContent>
     </Dialog>
   );
