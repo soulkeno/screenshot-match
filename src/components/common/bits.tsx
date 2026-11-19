@@ -157,13 +157,21 @@ export function SnowCap({ className, withLights = true }: { className?: string; 
   );
 }
 
-export function VipTag() {
+import { CLUBS, type ClubTier, getClubTier } from "@/lib/clubs";
+
+export function ClubTag({ tier = "vip", className }: { tier?: ClubTier; className?: string }) {
+  if (tier === "none") return null;
+  const meta = CLUBS[tier] || CLUBS.vip;
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-gradient-gold px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary-foreground shadow-sm">
-      <img src="/vip-badge.png" alt="VIP" className="size-4 object-contain drop-shadow-sm" />
-      VIP
+    <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-sm border", meta.bg, meta.border, meta.tone, className)}>
+      <img src="/vip-badge.png" alt="Club" className="size-3.5 object-contain drop-shadow-sm" />
+      {meta.badge}
     </span>
   );
+}
+
+export function VipTag({ tier }: { tier?: ClubTier }) {
+  return <ClubTag tier={tier ?? "vip"} />;
 }
 
 export function Coin({ className }: { className?: string }) {

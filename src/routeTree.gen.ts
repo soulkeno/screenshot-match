@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ClubsRouteImport } from './routes/clubs'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as RakebackRouteImport } from './routes/rakeback'
@@ -30,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClubsRoute = ClubsRouteImport.update({
+  id: '/clubs',
+  path: '/clubs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FavouritesRoute = FavouritesRouteImport.update({
@@ -86,6 +92,7 @@ const PlaySlugRoute = PlaySlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/clubs': typeof ClubsRoute
   '/favourites': typeof FavouritesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/rakeback': typeof RakebackRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/clubs': typeof ClubsRoute
   '/favourites': typeof FavouritesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/rakeback': typeof RakebackRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/clubs': typeof ClubsRoute
   '/favourites': typeof FavouritesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/rakeback': typeof RakebackRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/clubs'
     | '/favourites'
     | '/leaderboard'
     | '/rakeback'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/clubs'
     | '/favourites'
     | '/leaderboard'
     | '/rakeback'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/clubs'
     | '/favourites'
     | '/leaderboard'
     | '/rakeback'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  ClubsRoute: typeof ClubsRoute
   FavouritesRoute: typeof FavouritesRoute
   LeaderboardRoute: typeof LeaderboardRoute
   RakebackRoute: typeof RakebackRoute
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clubs': {
+      id: '/clubs'
+      path: '/clubs'
+      fullPath: '/clubs'
+      preLoaderRoute: typeof ClubsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/favourites': {
@@ -278,6 +298,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  ClubsRoute: ClubsRoute,
   FavouritesRoute: FavouritesRoute,
   LeaderboardRoute: LeaderboardRoute,
   RakebackRoute: RakebackRoute,

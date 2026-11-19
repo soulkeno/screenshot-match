@@ -106,10 +106,10 @@ export const kenoDraw = (fs: number[]) => pickDistinct(fs, KENO_TILES, 10).map((
 
 // ---------- Mines ----------
 export const MINES_TILES = 25;
-export const minesPositions = (fs: number[], mines: number) => pickDistinct(fs, MINES_TILES, mines);
-export function minesMultiplier(mines: number, revealed: number) {
+export const minesPositions = (fs: number[], mines: number, totalTiles = 25) => pickDistinct(fs, totalTiles, mines);
+export function minesMultiplier(mines: number, revealed: number, totalTiles = 25) {
   let m = 1;
-  for (let i = 0; i < revealed; i++) m *= (MINES_TILES - i) / (MINES_TILES - mines - i);
+  for (let i = 0; i < revealed; i++) m *= (totalTiles - i) / (totalTiles - mines - i);
   return revealed === 0 ? 1 : floor2(m * EDGE);
 }
 
@@ -173,6 +173,35 @@ export function bjValue(cards: Card[]) {
   return { total, soft: aces > 0 };
 }
 export const isBlackjack = (cards: Card[]) => cards.length === 2 && bjValue(cards).total === 21;
+
+export function evaluatePerfectPairs(p1: Card, p2: Card): { won: boolean; mult: number; label?: string } {
+  if (p1.rank !== p2.rank) return { won: false, mult: 0 };
+  const isRed = (s: number) => s === 1 || s === 2;
+  if (p1.suit === p2.suit) return { won: true, mult: 25, label: "Perfect Pair (25:1)" };
+  if (isRed(p1.suit) === isRed(p2.suit)) return { won: true, mult: 12, label: "Colored Pair (12:1)" };
+  return { won: true, mult: 6, label: "Mixed Pair (6:1)" };
+}
+
+export function evaluate21Plus3(p1: Card, p2: Card, d1: Card): { won: boolean; mult: number; label?: string } {
+  const cards = [p1, p2, d1];
+  const suits = cards.map((c) => c.suit);
+  const sameSuit = suits[0] === suits[1] && suits[1] === suits[2];
+  const ranks = cards.map((c) => c.rank).sort((a, b) => a - b);
+  const sameRank = ranks[0] === ranks[1] && ranks[1] === ranks[2];
+
+  if (sameRank && sameSuit) return { won: true, mult: 100, label: "Suited Trips (100:1)" };
+
+  let isStraight = false;
+  if (ranks[0] + 1 === ranks[1] && ranks[1] + 1 === ranks[2]) isStraight = true;
+  if (ranks[0] === 1 && ranks[1] === 12 && ranks[2] === 13) isStraight = true; // A-Q-K
+
+  if (isStraight && sameSuit) return { won: true, mult: 40, label: "Straight Flush (40:1)" };
+  if (sameRank) return { won: true, mult: 30, label: "Three of a Kind (30:1)" };
+  if (isStraight) return { won: true, mult: 10, label: "Straight (10:1)" };
+  if (sameSuit) return { won: true, mult: 5, label: "Flush (5:1)" };
+
+  return { won: false, mult: 0 };
+}
 
 // ---------- Baccarat ----------
 export const bacValue = (c: Card) => (c.rank >= 10 ? 0 : c.rank);

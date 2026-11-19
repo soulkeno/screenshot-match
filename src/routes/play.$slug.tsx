@@ -22,11 +22,13 @@ import Crash from "@/components/games/Crash";
 import PvpCoinflip from "@/components/pvp/PvpCoinflip";
 import MinesDuel from "@/components/pvp/MinesDuel";
 import CaseBattles from "@/components/pvp/CaseBattles";
+import ChessDuel from "@/components/pvp/ChessDuel";
 
 const SCREENS: Record<string, ComponentType> = {
   mines: Mines, towers: Towers, dice: Dice, limbo: Limbo, coinflip: Coinflip, rps: Rps, hilo: Hilo, blackjack: Blackjack,
   baccarat: Baccarat, plinko: Plinko, keno: Keno, roulette: Roulette, upgrader: Upgrader, cases: Cases, slots: Slots,
   snakes: Snakes, crash: Crash, "pvp-coinflip": PvpCoinflip, "mines-duel": MinesDuel, "case-battles": CaseBattles,
+  chess: ChessDuel,
 };
 
 export const Route = createFileRoute("/play/$slug")({

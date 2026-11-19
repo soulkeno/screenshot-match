@@ -91,6 +91,30 @@ export const duelClaimFn = createServerFn({ method: "POST" })
     return E.duelClaim(context.userId, data.id);
   });
 
+export const chessMoveFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; from: string; to: string; promotion?: string }) => d)
+  .handler(async ({ data, context }): Promise<any> => {
+    const E = await import("./engine.server");
+    return E.chessMove(context.userId, data.id, data.from, data.to, data.promotion);
+  });
+
+export const chessResignFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }): Promise<any> => {
+    const E = await import("./engine.server");
+    return E.chessResign(context.userId, data.id);
+  });
+
+export const pvpCallBotFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }): Promise<any> => {
+    const E = await import("./engine.server");
+    return E.pvpCallBot(context.userId, data.id);
+  });
+
 export const changeUsernameFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { username: string }) => d)
@@ -165,4 +189,19 @@ export const crashCashoutFn = createServerFn({ method: "POST" })
   .handler(async ({ context }): Promise<any> => {
     const F = await import("./features.server");
     return F.crashCashout(context.userId);
+  });
+
+export const adminGetAuditLogsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<any> => {
+    const A = await import("./audit.server");
+    return A.getAdminAuditLogs(context.userId);
+  });
+
+export const adminRecordActionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { action: string; targetId?: string; details?: string }) => d)
+  .handler(async ({ data, context }): Promise<any> => {
+    const A = await import("./audit.server");
+    return A.logAdminAction(context.userId, data.action, data.targetId, data.details);
   });

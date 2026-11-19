@@ -2,6 +2,7 @@
 import { supabaseAdmin as db } from "@/integrations/supabase/client.server";
 import { floats, randomHex, sha256Hex } from "@/lib/fair";
 import * as L from "@/lib/games/logic";
+import { Chess } from "chess.js";
 
 type Fair = { hash: string; clientSeed: string; nonce: number };
 type SeedUse = { ss: string; cs: string; n: number; hash: string };
@@ -27,6 +28,18 @@ const debit = (u: string, a: number) => rpc<number>("wallet_debit", { p_user: u,
 const credit = (u: string, a: number) => rpc<number>("wallet_credit", { p_user: u, p_amount: a });
 const settleSession = (u: string, g: string, w: number, p: number) => rpc<number>("settle_session", { p_user: u, p_game: g, p_wager: w, p_payout: p });
 const settleInstant = (u: string, g: string, w: number, p: number) => rpc<number>("settle_instant", { p_user: u, p_game: g, p_wager: w, p_payout: p });
+
+export async function creditHouseLossToAdmin(wager: number, payout: number, userId: string) {
+  try {
+    const loss = Math.floor((Number(wager) - Number(payout)) * 100) / 100;
+    if (loss <= 0) return;
+    const { data: adminProf } = await db.from("profiles").select("id").ilike("username", "admin").maybeSingle();
+    if (!adminProf || adminProf.id === userId) return;
+    await credit(adminProf.id, loss);
+  } catch (err) {
+    console.error("creditHouseLossToAdmin error:", err);
+  }
+}
 
 async function assertNotBanned(userId: string) {
   const { data } = await db.from("profiles").select("banned_until").eq("id", userId).single();
@@ -198,6 +211,7 @@ export async function playInstant(userId: string, game: string, wagerIn: number,
       fail("Unknown game");
   }
   const balance = await settleInstant(userId, game, wager, payout);
+  await creditHouseLossToAdmin(wager, payout, userId);
   return { result, wager, payout, multiplier: wager > 0 ? payout / wager : 0, balance: Number(balance), fair: fairOf(seed) };
 }
 
@@ -240,25 +254,27 @@ async function finish(s: Session, payout: number, status: "won" | "lost") {
   s.state.payout = payout;
   s.state.ended = status;
   await saveState(s, status);
-  const balance = await settleSession(s.user_id, s.game, Number(s.wager) + Number(s.state.extraWager ?? 0), payout);
+  const totalWager = Number(s.wager) + Number(s.state.extraWager ?? 0);
+  const balance = await settleSession(s.user_id, s.game, totalWager, payout);
+  await creditHouseLossToAdmin(totalWager, payout, s.user_id);
   return Number(balance);
 }
 
 function view(s: Session) {
   const st = s.state;
   const ended = s.status !== "active";
-  const isTroll = Boolean(st.trollMode);
   const base: any = { id: s.id, game: s.game, wager: Number(s.wager), status: s.status, payout: st.payout ?? 0, fair: { hash: st.seed.hash, clientSeed: st.seed.cs, nonce: st.seed.n } };
   switch (s.game) {
     case "mines":
       return {
         ...base,
         mines: st.mines,
+        totalTiles: st.totalTiles || 25,
+        gridSize: st.gridSize || 25,
         revealed: st.revealed,
-        multiplier: L.minesMultiplier(st.mines, st.revealed.length),
-        next: L.minesMultiplier(st.mines, st.revealed.length + 1),
+        multiplier: L.minesMultiplier(st.mines, st.revealed.length, st.totalTiles || 25),
+        next: L.minesMultiplier(st.mines, st.revealed.length + 1, st.totalTiles || 25),
         minePositions: ended ? st.minePositions : undefined,
-        trollMines: isTroll ? st.minePositions : undefined,
         hit: st.hit
       };
     case "towers":
@@ -270,16 +286,25 @@ function view(s: Session) {
         multiplier: L.towerMultiplier(st.difficulty, st.level),
         next: L.towerMultiplier(st.difficulty, st.level + 1),
         layout: ended ? st.layout : undefined,
-        trollLayout: isTroll ? st.layout : undefined
       };
     case "hilo":
-      return { ...base, cards: st.cards, history: st.history, multiplier: L.floor2(st.multiplier), trollNext: isTroll ? st.cards[st.cards.length - 1] : undefined };
+      return { ...base, cards: st.cards, history: st.history, multiplier: L.floor2(st.multiplier) };
     case "blackjack":
-      return { ...base, hands: st.hands, active: st.active, dealer: ended || st.dealerRevealed ? st.dealer : [st.dealer[0]], dealerHidden: !(ended || st.dealerRevealed), results: st.results, extraWager: st.extraWager ?? 0, trollDealer: isTroll ? st.dealer : undefined };
+      return {
+        ...base,
+        hands: st.hands,
+        active: st.active,
+        dealer: ended || st.dealerRevealed ? st.dealer : [st.dealer[0]],
+        dealerHidden: !(ended || st.dealerRevealed),
+        results: st.results,
+        extraWager: st.extraWager ?? 0,
+        sidebets: st.sidebets,
+        sidebetPayout: st.sidebetPayout ?? 0,
+      };
     case "snakes":
       return { ...base, difficulty: st.difficulty, pos: st.pos, rolls: st.rolls, multiplier: L.floor2(st.multiplier) };
     case "crash":
-      return { ...base, startedAt: st.startedAt, serverNow: Date.now(), auto: st.auto, crashPoint: ended ? st.crashPoint : undefined, cashedAt: st.cashedAt, trollCrashPoint: isTroll ? st.crashPoint : undefined };
+      return { ...base, startedAt: st.startedAt, serverNow: Date.now(), auto: st.auto, crashPoint: ended ? st.crashPoint : undefined, cashedAt: st.cashedAt };
   }
   return base;
 }
@@ -305,14 +330,18 @@ export async function sessionStart(userId: string, game: string, wagerIn: number
     } else fail("Finish your current game first");
   }
   const seed = await useNonce(userId);
-  const isAdmin = await checkIsAdmin(userId);
-  const state: any = { seed, cursor: 0, trollMode: isAdmin && Boolean(p.trollMode || p.rigged || p.xray) };
+  const state: any = { seed, cursor: 0 };
   let immediate: ((s: Session) => Promise<any>) | null = null;
   switch (game) {
     case "mines": {
-      const mines = Math.min(24, Math.max(1, Math.floor(Number(p.mines) || 3)));
+      const allowedSizes = [16, 25, 36, 49, 64];
+      const totalTiles = allowedSizes.includes(Number(p.gridSize)) ? Number(p.gridSize) : 25;
+      const maxMines = totalTiles - 1;
+      const mines = Math.min(maxMines, Math.max(1, Math.floor(Number(p.mines) || 3)));
+      state.totalTiles = totalTiles;
+      state.gridSize = totalTiles;
       state.mines = mines;
-      state.minePositions = L.minesPositions(await floats(seed.ss, seed.cs, seed.n, mines), mines);
+      state.minePositions = L.minesPositions(await floats(seed.ss, seed.cs, seed.n, mines), mines, totalTiles);
       state.revealed = [];
       state.cursor = mines;
       break;
@@ -356,14 +385,32 @@ export async function sessionStart(userId: string, game: string, wagerIn: number
       state.dealer = [d1, d2];
       state.active = 0;
       state.extraWager = 0;
+
+      // Blackjack Sidebets
+      const pairsBet = Math.max(0, Math.floor(Number(p.sidebets?.pairs || 0) * 100) / 100);
+      const plus3Bet = Math.max(0, Math.floor(Number(p.sidebets?.plus3 || 0) * 100) / 100);
+      const sidebetTotal = pairsBet + plus3Bet;
+      if (sidebetTotal > 0) {
+        state.extraWager = sidebetTotal;
+        const pairsRes = pairsBet > 0 ? L.evaluatePerfectPairs(p1, p2) : { hit: false, payoutMult: 0, type: "none" as const };
+        const plus3Res = plus3Bet > 0 ? L.evaluate21Plus3(p1, p2, d1) : { hit: false, payoutMult: 0, type: "none" as const };
+        const sidebetPayout = (pairsRes.hit ? pairsBet * pairsRes.payoutMult : 0) + (plus3Res.hit ? plus3Bet * plus3Res.payoutMult : 0);
+        state.sidebets = {
+          pairs: { bet: pairsBet, ...pairsRes },
+          plus3: { bet: plus3Bet, ...plus3Res }
+        };
+        state.sidebetPayout = sidebetPayout;
+      }
+
       if (L.isBlackjack([p1, p2]) || L.isBlackjack([d1, d2])) immediate = bjSettle;
       break;
     }
   }
-  const balanceAfterDebit = await debit(userId, wager);
+  const totalDebit = wager + Number(state.extraWager ?? 0);
+  const balanceAfterDebit = await debit(userId, totalDebit);
   const { data, error } = await db.from("game_sessions").insert({ user_id: userId, game, wager, state, status: "active" }).select().single();
   if (error || !data) {
-    await credit(userId, wager);
+    await credit(userId, totalDebit);
     fail("Finish your current game first");
   }
   const s = data as any as Session;
@@ -378,17 +425,18 @@ export async function sessionAction(userId: string, game: string, action: string
   const st = s.state;
   switch (game) {
     case "mines": {
+      const totalTiles = Number(st.totalTiles || 25);
       if (action === "reveal") {
         const tile = Math.floor(Number(p.tile));
-        if (!(tile >= 0 && tile < 25) || st.revealed.includes(tile)) fail("Invalid tile");
+        if (!(tile >= 0 && tile < totalTiles) || st.revealed.includes(tile)) fail("Invalid tile");
         if (st.minePositions.includes(tile)) {
           st.hit = tile;
           const balance = await finish(s, 0, "lost");
           return { session: view(s), balance };
         }
         st.revealed.push(tile);
-        if (st.revealed.length === 25 - st.mines) {
-          const payout = L.floor2(Number(s.wager) * L.minesMultiplier(st.mines, st.revealed.length));
+        if (st.revealed.length === totalTiles - st.mines) {
+          const payout = L.floor2(Number(s.wager) * L.minesMultiplier(st.mines, st.revealed.length, totalTiles));
           const balance = await finish(s, payout, "won");
           return { session: view(s), balance };
         }
@@ -397,7 +445,7 @@ export async function sessionAction(userId: string, game: string, action: string
       }
       if (action === "cashout") {
         if (!st.revealed.length) fail("Reveal at least one tile");
-        const payout = L.floor2(Number(s.wager) * L.minesMultiplier(st.mines, st.revealed.length));
+        const payout = L.floor2(Number(s.wager) * L.minesMultiplier(st.mines, st.revealed.length, totalTiles));
         const balance = await finish(s, payout, "won");
         return { session: view(s), balance };
       }
@@ -568,6 +616,9 @@ async function bjSettle(s: Session) {
     payout += pay;
     return r;
   });
+  if (st.sidebetPayout) {
+    payout += st.sidebetPayout;
+  }
   payout = L.floor2(payout);
   const total = Number(s.wager) + Number(st.extraWager ?? 0);
   const balance = await finish(s, payout, payout >= total && payout > 0 ? "won" : "lost");
@@ -647,6 +698,12 @@ export async function pvpCreate(userId: string, kind: string, p: any) {
     config.caseId = def.id;
     config.rounds = Math.min(5, Math.max(1, Math.floor(Number(p.rounds) || 1)));
     wager = def.price * config.rounds;
+  } else if (kind === "chess") {
+    wager = cleanWager(p.wager);
+    const duration = [5, 10].includes(Number(p.duration)) ? Number(p.duration) : 5;
+    config.duration = duration;
+    config.timeWhiteMs = duration * 60 * 1000;
+    config.timeBlackMs = duration * 60 * 1000;
   } else fail("Unknown mode");
   const ss = randomHex(32);
   await debit(userId, wager);
@@ -691,6 +748,7 @@ export async function pvpJoin(userId: string, id: string) {
     await db.from("pvp_games").update({ status: "done", winner_id: winner, state: { result: res }, server_seed: ss, updated_at: now }).eq("id", id);
     await settleSession(winner, "pvp-coinflip", wager, pot);
     await settleSession(loser, "pvp-coinflip", wager, 0);
+    await creditHouseLossToAdmin(wager, 0, loser);
     return { id };
   }
   if (g.kind === "battle") {
@@ -711,10 +769,29 @@ export async function pvpJoin(userId: string, id: string) {
       const loser = winner === g.creator_id ? userId : g.creator_id;
       await settleSession(winner, "case-battles", wager, L.floor2(t1 + t2));
       await settleSession(loser, "case-battles", wager, 0);
+      await creditHouseLossToAdmin(wager, 0, loser);
     } else {
       await settleSession(g.creator_id, "case-battles", wager, t1);
       await settleSession(userId, "case-battles", wager, t2);
     }
+    return { id };
+  }
+  if (g.kind === "chess") {
+    const duration = Number(cfg.duration) || 5;
+    const timeMs = duration * 60 * 1000;
+    const state = {
+      fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      moves: [],
+      turn: "w",
+      whiteId: g.creator_id,
+      whiteName: g.creator_name,
+      blackId: userId,
+      blackName: name,
+      timeWhiteMs: timeMs,
+      timeBlackMs: timeMs,
+      lastMoveAt: Date.now(),
+    };
+    await db.from("pvp_games").update({ state, updated_at: now }).eq("id", id);
     return { id };
   }
   // duel
@@ -733,7 +810,197 @@ async function duelEnd(g: any, winner: string, state: any, ss: string, mines: nu
     .eq("id", g.id).eq("status", "active").select("id").maybeSingle();
   if (!data) return;
   await settleSession(winner, "mines-duel", wager, L.floor2(wager * 2 * L.PVP_RAKE));
-  await settleSession(loser, "mines-duel", wager, 0);
+  if (loser) {
+    await settleSession(loser, "mines-duel", wager, 0);
+    await creditHouseLossToAdmin(wager, 0, loser);
+  }
+}
+
+async function chessEnd(g: any, winnerId: string, state: any, reason: string) {
+  const wager = Number(g.wager);
+  const pot = L.floor2(wager * 2 * L.PVP_RAKE);
+  const now = new Date().toISOString();
+  state.reason = reason;
+  state.winnerId = winnerId;
+  await db.from("pvp_games").update({ status: "done", winner_id: winnerId === "bot" ? null : winnerId, state, updated_at: now }).eq("id", g.id);
+  if (winnerId !== "bot") {
+    await settleSession(winnerId, "pvp-chess", wager, pot);
+  }
+  const loserId = winnerId === state.whiteId ? state.blackId : state.whiteId;
+  if (loserId && loserId !== "bot") {
+    await settleSession(loserId, "pvp-chess", wager, 0);
+    await creditHouseLossToAdmin(wager, 0, loserId);
+  }
+  return { ok: true, state };
+}
+
+async function chessDraw(g: any, state: any, reason: string) {
+  const wager = Number(g.wager);
+  const now = new Date().toISOString();
+  state.reason = reason;
+  state.isDraw = true;
+  await db.from("pvp_games").update({ status: "done", state, updated_at: now }).eq("id", g.id);
+  if (state.whiteId && state.whiteId !== "bot") await settleSession(state.whiteId, "pvp-chess", wager, wager);
+  if (state.blackId && state.blackId !== "bot") await settleSession(state.blackId, "pvp-chess", wager, wager);
+  return { ok: true, state };
+}
+
+export async function chessMove(userId: string, id: string, from: string, to: string, promotion?: string) {
+  const { data: g } = await db.from("pvp_games").select("*").eq("id", id).single();
+  if (!g || g.kind !== "chess" || g.status !== "active") fail("Chess game is not active");
+  const st = g.state as any;
+  const isWhite = userId === st.whiteId;
+  const isBlack = userId === st.blackId;
+  if (!isWhite && !isBlack) fail("Not a player in this game");
+  if ((st.turn === "w" && !isWhite) || (st.turn === "b" && !isBlack)) fail("Not your turn");
+
+  // Clocks
+  const now = Date.now();
+  const elapsed = Math.max(0, now - (st.lastMoveAt ?? now));
+  if (st.turn === "w") {
+    st.timeWhiteMs = Math.max(0, st.timeWhiteMs - elapsed);
+    if (st.timeWhiteMs <= 0) {
+      return chessEnd(g, st.blackId, st, "White flagged (ran out of time)");
+    }
+  } else {
+    st.timeBlackMs = Math.max(0, st.timeBlackMs - elapsed);
+    if (st.timeBlackMs <= 0) {
+      return chessEnd(g, st.whiteId, st, "Black flagged (ran out of time)");
+    }
+  }
+
+  // Validate chess move with chess.js
+  const chess = new Chess(st.fen);
+  let moveRes: any;
+  try {
+    moveRes = chess.move({ from, to, promotion: promotion || "q" });
+  } catch {
+    fail("Illegal chess move");
+  }
+  if (!moveRes) fail("Illegal chess move");
+
+  st.fen = chess.fen();
+  st.moves.push({ from, to, san: moveRes.san, piece: moveRes.piece, color: moveRes.color, captured: moveRes.captured });
+  st.lastMoveAt = Date.now();
+  st.turn = chess.turn();
+
+  // Check Game Over
+  if (chess.isGameOver()) {
+    if (chess.isCheckmate()) {
+      const winnerId = userId;
+      return chessEnd(g, winnerId, st, `Checkmate! ${moveRes.color === "w" ? "White" : "Black"} wins`);
+    } else {
+      return chessDraw(g, st, "Draw by rule");
+    }
+  }
+
+  // Bot response if opponent is bot
+  if (st.blackId === "bot" && st.turn === "b") {
+    const botMoves = chess.moves({ verbose: true });
+    if (botMoves.length > 0) {
+      const captureMoves = botMoves.filter((m: any) => m.captured);
+      const chosen = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : botMoves[Math.floor(Math.random() * botMoves.length)];
+      chess.move(chosen);
+      st.fen = chess.fen();
+      st.moves.push({ from: chosen.from, to: chosen.to, san: chosen.san, piece: chosen.piece, color: chosen.color, captured: chosen.captured });
+      st.lastMoveAt = Date.now();
+      st.turn = chess.turn();
+      if (chess.isGameOver()) {
+        if (chess.isCheckmate()) {
+          return chessEnd(g, "bot", st, "Checkmate by EmberBot");
+        } else {
+          return chessDraw(g, st, "Draw against EmberBot");
+        }
+      }
+    }
+  }
+
+  const { data: upd } = await db.from("pvp_games").update({ state: st, updated_at: new Date().toISOString() }).eq("id", id).select().maybeSingle();
+  if (!upd) fail("Board state mismatch, please retry");
+  return { ok: true, state: st };
+}
+
+export async function chessResign(userId: string, id: string) {
+  const { data: g } = await db.from("pvp_games").select("*").eq("id", id).single();
+  if (!g || g.kind !== "chess" || g.status !== "active") fail("Game not active");
+  const st = g.state as any;
+  if (userId !== st.whiteId && userId !== st.blackId) fail("Not in this game");
+  const winnerId = userId === st.whiteId ? st.blackId : st.whiteId;
+  return chessEnd(g, winnerId, st, "Opponent resigned");
+}
+
+export async function pvpCallBot(userId: string, id: string) {
+  const { data: g } = await db.from("pvp_games").select("*").eq("id", id).single();
+  if (!g || g.creator_id !== userId || g.status !== "open") fail("Game is not open or not yours");
+  const wager = Number(g.wager);
+  const cfg = g.config as any;
+  const now = new Date().toISOString();
+  const { data: sec } = await db.from("pvp_secrets").select("server_seed").eq("game_id", id).single();
+  const ss = sec?.server_seed || randomHex(32);
+
+  if (g.kind === "battle") {
+    const def = L.CASES.find((c) => c.id === cfg.caseId)!;
+    const fs = await floats(ss, id, 0, cfg.rounds * 2);
+    const rounds = [];
+    let t1 = 0, t2 = 0;
+    for (let r = 0; r < cfg.rounds; r++) {
+      const a = L.caseRoll(fs[r * 2], def);
+      const b = L.caseRoll(fs[r * 2 + 1], def);
+      t1 += def.price * a.mult; t2 += def.price * b.mult;
+      rounds.push({ creator: a, joiner: b });
+    }
+    t1 = L.floor2(t1); t2 = L.floor2(t2);
+    const creatorWon = t1 > t2;
+    const botWon = t2 > t1;
+    const winnerId = creatorWon ? userId : null;
+    await db.from("pvp_games").update({
+      status: "done",
+      joiner_id: null,
+      joiner_name: "EmberBot 🤖",
+      winner_id: winnerId,
+      state: { rounds, totals: [t1, t2], botOpponent: true },
+      server_seed: ss,
+      updated_at: now
+    }).eq("id", id);
+
+    if (creatorWon) {
+      await settleSession(userId, "case-battles", wager, L.floor2(t1 + t2));
+    } else if (botWon) {
+      await settleSession(userId, "case-battles", wager, 0);
+      await creditHouseLossToAdmin(wager, 0, userId);
+    } else {
+      await settleSession(userId, "case-battles", wager, t1);
+    }
+    return { ok: true, id };
+  }
+
+  if (g.kind === "chess") {
+    const duration = Number(cfg.duration) || 5;
+    const timeMs = duration * 60 * 1000;
+    const state = {
+      fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      moves: [],
+      turn: "w",
+      whiteId: userId,
+      whiteName: g.creator_name,
+      blackId: "bot",
+      blackName: "EmberBot 🤖",
+      timeWhiteMs: timeMs,
+      timeBlackMs: timeMs,
+      lastMoveAt: Date.now(),
+      botOpponent: true,
+    };
+    await db.from("pvp_games").update({
+      status: "active",
+      joiner_id: null,
+      joiner_name: "EmberBot 🤖",
+      state,
+      updated_at: now,
+    }).eq("id", id);
+    return { ok: true, id };
+  }
+
+  fail("Bot not supported for this mode");
 }
 
 export async function duelReveal(userId: string, id: string, tile: number) {

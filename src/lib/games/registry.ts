@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Dice5, Rocket, Bomb, Castle, CircleDot, TrendingUp, Grid3x3, ArrowUpDown, Spade, Club, Disc3, Coins,
-  ArrowBigUpDash, Worm, Scissors, Package, Cherry, Swords, Boxes, Users, Plane,
+  ArrowBigUpDash, Worm, Scissors, Package, Cherry, Swords, Boxes, Users, Plane, Crown,
 } from "lucide-react";
 
 export type GameCategory = "originals" | "pvp" | "slots";
@@ -35,6 +35,7 @@ export const GAMES: GameMeta[] = [
   { slug: "pvp-coinflip", name: "PVP Coinflip", category: "pvp", tone: "tone-gold", icon: Swords, blurb: "Flip against another player" },
   { slug: "mines-duel", name: "Mines Duel", category: "pvp", tone: "tone-red", icon: Users, blurb: "One board, two players, one mine too many" },
   { slug: "case-battles", name: "Case Battles", category: "pvp", tone: "tone-magenta", icon: Boxes, blurb: "Open cases head to head, winner takes all" },
+  { slug: "chess", name: "Chess Duel", category: "pvp", tone: "tone-violet", icon: Crown, blurb: "1v1 PvP Chess with real rules, winner takes all" },
 ];
 
 export const GAME_BY_SLUG: Record<string, GameMeta> = Object.fromEntries(GAMES.map((g) => [g.slug, g]));

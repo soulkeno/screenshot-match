@@ -133,15 +133,15 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <aside className="flex h-full w-full flex-col border-l border-border bg-sidebar">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
+    <aside className="flex h-full w-full flex-col border-l border-[#1e1735]/80 bg-[#0d091a]/95 backdrop-blur-xl">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#1e1735]/80 px-4">
         <div className="flex items-center gap-2">
-          <h3 className="font-bold">Chat</h3>
+          <h3 className="font-bold text-foreground">Chat</h3>
           <span className="flex items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted-foreground">
             <span className="size-1.5 rounded-full bg-success animate-pulse-ring" />{online} online
           </span>
         </div>
-        <button onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-surface-2 hover:text-foreground" aria-label="Hide chat"><X className="size-4" /></button>
+        <button onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-foreground" aria-label="Hide chat"><X className="size-4" /></button>
       </div>
 
       <RainCard />
@@ -158,10 +158,10 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div className="shrink-0 border-t border-border p-3">
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-2 focus-within:border-primary/50">
+      <div className="shrink-0 border-t border-[#1e1735]/80 p-3">
+        <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-[#16102a]/80 px-2 focus-within:border-primary/50">
           <input value={text} onChange={(e) => setText(e.target.value.slice(0, 200))} onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder={profile?.banned_until ? "You can't chat right now" : "Send a message..."} className="h-11 min-w-0 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground" />
+            placeholder={profile?.banned_until ? "You can't chat right now" : "Type Message..."} className="h-11 min-w-0 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground/50" />
           <Popover>
             <PopoverTrigger asChild>
               <button className="rounded-md p-1.5 text-muted-foreground hover:bg-surface-2 hover:text-primary" aria-label="Emojis and rain"><Smile className="size-4" /></button>

@@ -2,6 +2,7 @@
 import { supabaseAdmin as db } from "@/integrations/supabase/client.server";
 import { floats, randomHex, sha256Hex } from "@/lib/fair";
 import * as L from "@/lib/games/logic";
+import { creditHouseLossToAdmin } from "@/lib/engine.server";
 import {
   WHEELS, WHEEL_COOLDOWN_MS, wheelTierFor, pickSlice, QUEST_POOL, pickQuests, questProgress, questGoal,
   nextStreak, streakBonus, utcDay, CRASH_BET_MS, CRASH_COOLDOWN_MS, type QuestDef,
@@ -173,7 +174,9 @@ async function settleBet(r: Round, b: any, cashedAt: number | null) {
   const { data } = await db.from("crash_bets").update({ settled: true, cashed_at: cashedAt, payout })
     .eq("id", b.id).eq("settled", false).select("id").maybeSingle();
   if (!data) return null;
-  return settleSession(b.user_id, "crash", Number(b.wager), payout);
+  const res = await settleSession(b.user_id, "crash", Number(b.wager), payout);
+  await creditHouseLossToAdmin(Number(b.wager), payout, b.user_id);
+  return res;
 }
 async function settleRound(r: Round, now: number) {
   const ended = now >= t(r.ends_at);

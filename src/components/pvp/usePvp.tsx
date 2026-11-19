@@ -2,10 +2,10 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Bot } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { pvpCancelFn, pvpCreateFn, pvpJoinFn } from "@/lib/games.functions";
+import { pvpCancelFn, pvpCreateFn, pvpJoinFn, pvpCallBotFn } from "@/lib/games.functions";
 import { useApp } from "@/lib/app-context";
 import { errMsg } from "@/lib/format";
 import { Amount, UserAvatar } from "@/components/common/bits";
@@ -21,6 +21,7 @@ export function usePvp(kind: string) {
   const create = useServerFn(pvpCreateFn);
   const join = useServerFn(pvpJoinFn);
   const cancel = useServerFn(pvpCancelFn);
+  const callBot = useServerFn(pvpCallBotFn);
 
   const load = useCallback(async () => {
     const since = new Date(Date.now() - 30 * 60_000).toISOString();
@@ -57,6 +58,7 @@ export function usePvp(kind: string) {
     create: (params: any) => run("create", () => create({ data: { kind, params } })),
     join: (id: string) => run(id, () => join({ data: { id } })),
     cancel: (id: string) => run(id, () => cancel({ data: { id } })),
+    callBot: (id: string) => run(id, () => callBot({ data: { id } })),
   };
 }
 
@@ -65,7 +67,7 @@ export function PlayerChip({ name, you, className }: { name: string | null; you?
   return <span className={cn("flex items-center gap-2 text-sm font-semibold", className)}><UserAvatar name={name} size={32} />{name}{you && <span className="text-[10px] text-primary">(you)</span>}</span>;
 }
 
-export function LobbyRow({ g, me, busy, onJoin, onCancel, onOpen, children }: { g: PvpGame; me: string | null; busy: string | null; onJoin: () => void; onCancel: () => void; onOpen?: () => void; children?: ReactNode }) {
+export function LobbyRow({ g, me, busy, onJoin, onCancel, onCallBot, onOpen, children }: { g: PvpGame; me: string | null; busy: string | null; onJoin: () => void; onCancel: () => void; onCallBot?: () => void; onOpen?: () => void; children?: ReactNode }) {
   const mine = g.creator_id === me;
   const involved = mine || g.joiner_id === me;
   return (
@@ -75,10 +77,30 @@ export function LobbyRow({ g, me, busy, onJoin, onCancel, onOpen, children }: { 
       <PlayerChip name={g.joiner_name} you={g.joiner_id === me} />
       <div className="flex-1">{children}</div>
       <Amount value={g.wager} compact />
-      {g.status === "open" && (mine
-        ? <Button size="sm" variant="surface" disabled={busy === g.id} onClick={onCancel}>{busy === g.id ? <Loader2 className="animate-spin" /> : <X />}Cancel</Button>
-        : <Button size="sm" disabled={busy === g.id} onClick={onJoin}>{busy === g.id ? <Loader2 className="animate-spin" /> : "Join"}</Button>)}
-      {g.status !== "open" && onOpen && <Button size="sm" variant={involved && g.status === "active" ? "default" : "surface"} onClick={onOpen}>{g.status === "active" ? (involved ? "Play" : "Watch") : "View"}</Button>}
+      {g.status === "open" && (
+        mine ? (
+          <div className="flex items-center gap-2">
+            {onCallBot && (
+              <Button size="sm" variant="default" className="bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30 font-bold" disabled={busy === g.id} onClick={onCallBot}>
+                {busy === g.id ? <Loader2 className="animate-spin size-3.5 mr-1" /> : <Bot className="size-3.5 mr-1" />}
+                Call Bot
+              </Button>
+            )}
+            <Button size="sm" variant="surface" disabled={busy === g.id} onClick={onCancel}>
+              {busy === g.id ? <Loader2 className="animate-spin" /> : <X />} Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button size="sm" disabled={busy === g.id} onClick={onJoin}>
+            {busy === g.id ? <Loader2 className="animate-spin" /> : "Join"}
+          </Button>
+        )
+      )}
+      {g.status !== "open" && onOpen && (
+        <Button size="sm" variant={involved && g.status === "active" ? "default" : "surface"} onClick={onOpen}>
+          {g.status === "active" ? (involved ? "Play" : "Watch") : "View"}
+        </Button>
+      )}
     </div>
   );
 }

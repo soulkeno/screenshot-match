@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { Boxes, Loader2 } from "lucide-react";
+import { Boxes, Loader2, Bot } from "lucide-react";
 import { GameLayout, Segmented } from "@/components/games/GameLayout";
 import { CaseReel } from "@/components/games/CaseReel";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { LobbyRow, PlayerChip, usePvp, type PvpGame } from "./usePvp";
 export default function CaseBattles() {
   const [caseId, setCaseId] = useState(CASES[0].id);
   const [rounds, setRounds] = useState(1);
-  const { games, userId, busy, create, join, cancel } = usePvp("battle");
+  const { games, userId, busy, create, join, cancel, callBot } = usePvp("battle");
   const [watch, setWatch] = useState<string | null>(null);
   const { refresh } = useApp();
   const def = CASES.find((c) => c.id === caseId)!;
@@ -43,7 +43,16 @@ export default function CaseBattles() {
         </>
       }>
         <div className="flex h-full min-h-[420px] items-center justify-center p-4">
-          {current ? <BattleView key={current.id + current.status} g={current} me={userId} onClose={() => setWatch(null)} /> : (
+          {current ? (
+            <BattleView
+              key={current.id + current.status}
+              g={current}
+              me={userId}
+              busy={busy}
+              onCallBot={async () => { await callBot(current.id); void refresh(); }}
+              onClose={() => setWatch(null)}
+            />
+          ) : (
             <div className="text-center text-muted-foreground"><Boxes className="mx-auto size-16 opacity-40" /><p className="mt-4 text-sm">Create a battle or join one below.</p></div>
           )}
         </div>
@@ -54,7 +63,16 @@ export default function CaseBattles() {
         {games.map((g) => {
           const c = CASES.find((x) => x.id === (g.config as any)?.caseId);
           return (
-            <LobbyRow key={g.id} g={g} me={userId} busy={busy} onJoin={async () => { const r = await join(g.id); if (r) setWatch(g.id); }} onCancel={() => void cancel(g.id)} onOpen={() => setWatch(g.id)}>
+            <LobbyRow
+              key={g.id}
+              g={g}
+              me={userId}
+              busy={busy}
+              onJoin={async () => { const r = await join(g.id); if (r) setWatch(g.id); }}
+              onCancel={() => void cancel(g.id)}
+              onCallBot={async () => { const r = await callBot(g.id); if (r) { setWatch(g.id); void refresh(); } }}
+              onOpen={() => setWatch(g.id)}
+            >
               <span className="text-xs font-bold text-muted-foreground">{(g.config as any)?.rounds}× {c?.name}</span>
             </LobbyRow>
           );
@@ -64,7 +82,7 @@ export default function CaseBattles() {
   );
 }
 
-function BattleView({ g, me, onClose }: { g: PvpGame; me: string | null; onClose: () => void }) {
+function BattleView({ g, me, busy, onCallBot, onClose }: { g: PvpGame; me: string | null; busy: string | null; onCallBot: () => void; onClose: () => void }) {
   const cfg = g.config as any;
   const st = g.state as any;
   const def = CASES.find((c) => c.id === cfg.caseId)!;
@@ -103,6 +121,20 @@ function BattleView({ g, me, onClose }: { g: PvpGame; me: string | null; onClose
           </div>
         ))}
       </div>
+      {g.status === "open" && g.creator_id === me && (
+        <div className="mt-4 flex flex-col items-center justify-center gap-2">
+          <Button
+            variant="play"
+            size="lg"
+            disabled={busy === g.id}
+            onClick={onCallBot}
+            className="shadow-glow"
+          >
+            <Bot className="size-4 mr-2" /> Call Bot Opponent
+          </Button>
+          <p className="text-xs text-muted-foreground">Don't want to wait? Challenge EmberBot immediately!</p>
+        </div>
+      )}
       <div className="mt-4 text-center">
         {done && <p className="font-display text-3xl tracking-wide text-success animate-fade-up">{winnerName ? `${winnerName} wins` : "It's a tie"}</p>}
         <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
