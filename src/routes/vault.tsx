@@ -34,7 +34,7 @@ function Page() {
 
   // Vault Daily Interest calculations
   const prog = rankProgress(profile?.total_wagered);
-  const rate = vaultRate(prog.cur.level, !!profile?.is_vip);
+  const rate = vaultRate(prog.cur.index, !!profile?.is_vip);
   const ratePct = (rate * 100).toFixed(2);
   const vaultSince = (wallet as any)?.vault_since ? new Date((wallet as any).vault_since).getTime() : null;
   const elapsedMs = vaultSince && vault > 0 ? Math.max(0, now - vaultSince) : 0;

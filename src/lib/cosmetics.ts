@@ -187,3 +187,6 @@ export function useEquippedStyles(userId: string | null) {
     glowClass: resolveGlowClass(equipped.glow),
   };
 }
+
+export const getFontFamily = (id: string | null | undefined) => resolveFontFamily(id) ?? "inherit";
+export const getGlowClass = (id: string | null | undefined) => resolveGlowClass(id);
