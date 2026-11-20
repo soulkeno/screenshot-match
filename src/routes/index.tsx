@@ -1,228 +1,457 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Flame, Swords, Plane, ChevronLeft, ChevronRight, Sparkles, Rocket,
-  Dice5, Disc3, Bomb, ArrowRight, ShieldCheck, Trophy
+  Disc3, Spade, ShieldCheck, Trophy, Layers, Filter, Check, Crown
 } from "lucide-react";
-import { GAMES } from "@/lib/games/registry";
+import { GAMES, type GameMeta } from "@/lib/games/registry";
 import { GameGrid } from "@/components/app/GameTile";
 import { LiveBets } from "@/components/app/LiveBets";
-import { SectionTitle } from "@/components/common/bits";
+import { UserAvatar, Coin } from "@/components/common/bits";
 import { useApp } from "@/lib/app-context";
+import { supabase } from "@/integrations/supabase/client";
+import { fmt, fmtCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Keno Casino — Provably Fair Crypto Casino" },
-      { name: "description", content: "Play Mines, Crash, Blackjack, Chess Duels, Roulette and slots. Daily rewards and rakeback." },
-      { property: "og:title", content: "Keno Casino" },
-      { property: "og:description", content: "Play Mines, Crash, Blackjack, Chess Duels, Roulette and slots on Keno." },
+      { title: "EMBER Casino — Provably Fair Gaming" },
+      { name: "description", content: "Play Mines, Crash, Blackjack, PvP Chess, Slots and more on EMBER." },
+      { property: "og:title", content: "EMBER Casino" },
+      { property: "og:description", content: "Play Mines, Crash, Blackjack, PvP Chess, Slots and more on EMBER." },
     ],
   }),
   component: Home,
 });
 
-// Popular 3D game cards matching media_1795122310240_318d206c.jpg
-const POPULAR_GAMES = [
-  {
-    slug: "crash",
-    title: "CRASH",
-    badge: "999×",
-    badgeColor: "bg-amber-400 text-black",
-    bgGradient: "from-[#521369] via-[#6e1e8b] to-[#3a094e]",
-    border: "border-fuchsia-500/40",
-    glow: "shadow-[0_8px_30px_rgba(217,70,239,0.25)]",
-    icon: Rocket,
-    iconColor: "text-amber-300",
-  },
-  {
-    slug: "dice",
-    title: "HASH DICE",
-    badge: "777",
-    badgeColor: "bg-emerald-400 text-black",
-    bgGradient: "from-[#0d594b] via-[#127a67] to-[#083b31]",
-    border: "border-emerald-400/40",
-    glow: "shadow-[0_8px_30px_rgba(52,211,153,0.25)]",
-    icon: Dice5,
-    iconColor: "text-emerald-200",
-  },
-  {
-    slug: "keno",
-    title: "KENO",
-    badge: "12",
-    badgeColor: "bg-rose-500 text-white",
-    bgGradient: "from-[#8a2a1b] via-[#ba3924] to-[#59160b]",
-    border: "border-orange-500/40",
-    glow: "shadow-[0_8px_30px_rgba(249,115,22,0.25)]",
-    icon: Sparkles,
-    iconColor: "text-amber-200",
-  },
-  {
-    slug: "roulette",
-    title: "ROULETTE",
-    badge: "36×",
-    badgeColor: "bg-cyan-400 text-black",
-    bgGradient: "from-[#0c4e6e] via-[#106c99] to-[#073247]",
-    border: "border-cyan-400/40",
-    glow: "shadow-[0_8px_30px_rgba(56,189,248,0.25)]",
-    icon: Disc3,
-    iconColor: "text-cyan-200",
-  },
-  {
-    slug: "mines",
-    title: "MINES",
-    badge: "GEMS",
-    badgeColor: "bg-blue-400 text-black",
-    bgGradient: "from-[#1d2d6b] via-[#283f99] to-[#111c47]",
-    border: "border-blue-400/40",
-    glow: "shadow-[0_8px_30px_rgba(96,165,250,0.25)]",
-    icon: Bomb,
-    iconColor: "text-amber-300",
-  },
+type WinnerItem = {
+  id: string;
+  game: string;
+  username: string;
+  payout: number;
+  avatar_url?: string | null;
+  hot?: boolean;
+};
+
+const INITIAL_WINNERS: WinnerItem[] = [
+  { id: "w1", game: "crash", username: "Martin", payout: 2150, hot: false },
+  { id: "w2", game: "mines", username: "Bobbi", payout: 1770, hot: true },
+  { id: "w3", game: "slots", username: "Korben", payout: 4100, hot: false },
+  { id: "w4", game: "blackjack", username: "Kvoper", payout: 3120, hot: false },
+  { id: "w5", game: "chess", username: "Alexey", payout: 10100, hot: true },
+  { id: "w6", game: "roulette", username: "Niko", payout: 5400, hot: false },
+  { id: "w7", game: "towers", username: "Viper", payout: 2980, hot: false },
 ];
 
-function Home() {
+export function Home() {
   const { profile } = useApp();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"all" | "originals" | "slots" | "pvp" | "table" | "hot">("all");
+  const [winners, setWinners] = useState<WinnerItem[]>(INITIAL_WINNERS);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const tickerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch recent big bets from Supabase for live ticker
+  useEffect(() => {
+    supabase
+      .from("bets")
+      .select("id, game, username, payout, multiplier")
+      .gte("payout", 50)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const list: WinnerItem[] = data.map((b, idx) => ({
+            id: b.id,
+            game: b.game,
+            username: b.username || "Player",
+            payout: Number(b.payout),
+            hot: Number(b.multiplier) >= 5 || idx % 3 === 0,
+          }));
+          setWinners(list);
+        }
+      });
+
+    const ch = supabase
+      .channel("ticker-feed")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bets" }, (pl) => {
+        const b = pl.new as any;
+        if (Number(b.payout) > Number(b.wager)) {
+          setWinners((prev) => [
+            {
+              id: b.id,
+              game: b.game,
+              username: b.username || "Player",
+              payout: Number(b.payout),
+              hot: Number(b.multiplier) >= 5,
+            },
+            ...prev.slice(0, 15),
+          ]);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(ch);
+    };
+  }, []);
+
+  // Filter games according to active category
+  const filteredGames = GAMES.filter((g) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "originals") return g.category === "originals" && g.slug !== "baccarat";
+    if (activeTab === "slots") return g.category === "slots";
+    if (activeTab === "pvp") return g.category === "pvp";
+    if (activeTab === "table") {
+      return ["blackjack", "roulette", "baccarat", "hilo"].includes(g.slug);
+    }
+    if (activeTab === "hot") {
+      return ["crash", "mines", "slots", "chess", "plinko", "blackjack"].includes(g.slug);
+    }
+    return true;
+  });
+
+  const nextSlide = () => setCarouselIndex((i) => (i + 1) % 3);
+  const prevSlide = () => setCarouselIndex((i) => (i - 1 + 3) % 3);
 
   return (
-    <div className="space-y-8 animate-fade-up">
-      {/* Hero Banner (Matching media_1795122310240_318d206c.jpg) */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-r from-[#291b54] via-[#432d84] to-[#1c1240] p-6 md:p-10 shadow-2xl">
-        {/* Floating Background Glow & Decorative Elements */}
-        <div className="pointer-events-none absolute -right-16 -top-20 size-96 rounded-full bg-primary/25 blur-3xl" />
-        <div className="pointer-events-none absolute right-1/4 -bottom-20 size-80 rounded-full bg-purple-600/20 blur-3xl" />
+    <div className="space-y-6 animate-fade-up select-none pb-12">
+      {/* 3. Top Hero Section: 3-column promo carousel with circular left/right navigation arrows */}
+      <div className="relative">
+        {/* Navigation Arrows */}
+        <button
+          onClick={prevSlide}
+          className="absolute -left-3 top-1/2 z-20 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-[#1a1d24]/90 text-white shadow-xl backdrop-blur transition hover:scale-110 hover:bg-[#222630] cursor-pointer"
+          aria-label="Previous promo"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute -right-3 top-1/2 z-20 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-[#1a1d24]/90 text-white shadow-xl backdrop-blur transition hover:scale-110 hover:bg-[#222630] cursor-pointer"
+          aria-label="Next promo"
+        >
+          <ChevronRight className="size-5" />
+        </button>
 
-        {/* 3D Roulette & Chips Illustration Overlay on Right */}
-        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 hidden md:flex items-center justify-center opacity-90 pr-6">
-          <div className="relative size-64 lg:size-72 flex items-center justify-center">
-            {/* Outer spinning wheel ring representation */}
-            <div className="absolute inset-0 rounded-full border-8 border-purple-400/30 animate-[spin_40s_linear_infinite]" />
-            <div className="absolute inset-4 rounded-full border-4 border-dashed border-amber-400/40 animate-[spin_25s_linear_infinite_reverse]" />
-            <Disc3 className="size-48 text-purple-300 drop-shadow-[0_10px_25px_rgba(168,85,247,0.6)] animate-pulse" />
-            <div className="absolute -top-2 -left-2 rounded-xl bg-gold/90 p-2 text-black font-black text-xs shadow-lg rotate-12">
-              🪙 100K
+        {/* 3-Column Promo Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Card 1: Welcome Bonus */}
+          <div className="group relative flex h-60 flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#1a1333] via-[#1a1d24] to-[#121318] p-5 shadow-card transition-all hover:border-[#00d293]/30">
+            {/* Visual background art */}
+            <div className="absolute -right-4 -top-6 size-44 rounded-full bg-purple-600/20 blur-3xl pointer-events-none" />
+            <img
+              src="/games/crash.jpg"
+              alt=""
+              className="absolute right-0 top-0 h-full w-2/5 object-cover opacity-25 mix-blend-screen transition-transform duration-500 group-hover:scale-110 pointer-events-none"
+            />
+
+            <div>
+              <span className="inline-block rounded-full bg-[#00d293]/15 border border-[#00d293]/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#00d293]">
+                Special Offer
+              </span>
+              <h3 className="mt-2 text-xl font-black tracking-tight text-white">
+                Welcome Bonus
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground line-clamp-2 max-w-[220px]">
+                Top up your balance with $100 and get 50 free spins right now!
+              </p>
             </div>
-            <div className="absolute -bottom-2 -right-2 rounded-xl bg-cyan-400/90 p-2 text-black font-black text-xs shadow-lg -rotate-12">
-              🎰 LUCKY
+
+            <div className="flex items-center gap-2 pt-4 relative z-10">
+              <Link
+                to="/vault"
+                className="rounded-full bg-[#00d293] hover:bg-[#00d293]/90 text-[#05261b] px-4 py-2 text-xs font-black shadow-md transition hover:scale-105"
+              >
+                Claim Bonus
+              </Link>
+              <Link
+                to="/rewards"
+                className="rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 px-3.5 py-2 text-xs font-semibold transition"
+              >
+                Details
+              </Link>
             </div>
           </div>
-        </div>
 
-        {/* Left Content */}
-        <div className="relative z-10 max-w-xl space-y-4">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-primary border border-primary/40">
-            <Sparkles className="size-3 text-gold" />
-            <span>SIGN UP & GET REWARD</span>
+          {/* Card 2: VIP Program */}
+          <div className="group relative flex h-60 flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#0f2424] via-[#1a1d24] to-[#121318] p-5 shadow-card transition-all hover:border-[#00d293]/30">
+            <div className="absolute -right-4 -top-6 size-44 rounded-full bg-[#00d293]/20 blur-3xl pointer-events-none" />
+            <img
+              src="/vip-club-icon.png"
+              alt=""
+              className="absolute right-2 top-2 size-36 object-contain opacity-35 transition-transform duration-500 group-hover:scale-110 pointer-events-none"
+            />
+
+            <div>
+              <span className="inline-block rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-400">
+                Exclusive Perks
+              </span>
+              <h3 className="mt-2 text-xl font-black tracking-tight text-white">
+                VIP Program
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground line-clamp-2 max-w-[220px]">
+                Get daily rakeback, level-up perks, and unlock VIP club rewards.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-4 relative z-10">
+              <Link
+                to="/clubs"
+                className="rounded-full bg-[#00d293] hover:bg-[#00d293]/90 text-[#05261b] px-4 py-2 text-xs font-black shadow-md transition hover:scale-105"
+              >
+                Join VIP
+              </Link>
+              <Link
+                to="/rakeback"
+                className="rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 px-3.5 py-2 text-xs font-semibold transition"
+              >
+                Terms of Use
+              </Link>
+            </div>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.1]">
-            UP TO 1,000,000 COINS
-          </h1>
+          {/* Card 3: Daily Race / Tournaments */}
+          <div className="group relative flex h-60 flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#2a131b] via-[#1a1d24] to-[#121318] p-5 shadow-card transition-all hover:border-[#00d293]/30">
+            <div className="absolute -right-4 -top-6 size-44 rounded-full bg-rose-600/20 blur-3xl pointer-events-none" />
+            <img
+              src="/games/cases.jpg"
+              alt=""
+              className="absolute right-0 top-0 h-full w-2/5 object-cover opacity-25 mix-blend-screen transition-transform duration-500 group-hover:scale-110 pointer-events-none"
+            />
 
-          <p className="text-xs sm:text-sm text-purple-200/80 leading-relaxed max-w-md">
-            Dive into our wide range of in-house games, live casino and slots to experience true provably fair gaming.
-          </p>
+            <div>
+              <span className="inline-block rounded-full bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-rose-400">
+                Prize Pool Active
+              </span>
+              <h3 className="mt-2 text-xl font-black tracking-tight text-white">
+                Daily Race
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground line-clamp-2 max-w-[220px]">
+                Compete against players, climb the daily leaderboard and win massive coin prizes.
+              </p>
+            </div>
 
-          <div className="pt-2 flex items-center gap-3">
-            <Link
-              to="/rewards"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-purple-500 px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg transition-all hover:scale-105 hover:shadow-primary/50"
-            >
-              <span>GET STARTED</span>
-              <ArrowRight className="size-4" />
-            </Link>
-
-            <Link
-              to="/clubs"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-white hover:bg-white/10 transition-colors"
-            >
-              <span>View Clubs</span>
-            </Link>
-          </div>
-
-          {/* Dots Indicator */}
-          <div className="flex items-center gap-1.5 pt-4">
-            <span className="size-2 rounded-full bg-white" />
-            <span className="size-1.5 rounded-full bg-white/40" />
-            <span className="size-1.5 rounded-full bg-white/40" />
+            <div className="flex items-center gap-2 pt-4 relative z-10">
+              <Link
+                to="/leaderboard"
+                className="rounded-full bg-[#00d293] hover:bg-[#00d293]/90 text-[#05261b] px-4 py-2 text-xs font-black shadow-md transition hover:scale-105"
+              >
+                View Leaderboard
+              </Link>
+              <Link
+                to="/leaderboard"
+                className="rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 px-3.5 py-2 text-xs font-semibold transition"
+              >
+                Terms of Use
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Popular Games (Matching media_1795122310240_318d206c.jpg) */}
+      {/* Winner/Live Ticker: Compact horizontal scrolling row */}
+      <div className="relative overflow-hidden py-1">
+        <div
+          ref={tickerRef}
+          className="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth"
+        >
+          {winners.map((w) => {
+            const gameMeta = GAMES.find((g) => g.slug === w.game);
+            return (
+              <div
+                key={w.id}
+                onClick={() => navigate({ to: "/play/$slug", params: { slug: w.game } })}
+                className="relative flex items-center gap-3 rounded-2xl border border-white/5 bg-[#1a1d24] px-3.5 py-2.5 shrink-0 shadow-sm hover:border-[#00d293]/30 hover:bg-[#222630] transition cursor-pointer select-none"
+              >
+                {/* Hot Badge */}
+                {w.hot && (
+                  <span className="absolute -top-1 -right-1 rounded-full bg-rose-500 px-1.5 py-0.2 text-[9px] font-black text-white uppercase shadow-sm">
+                    HOT
+                  </span>
+                )}
+
+                {/* Game Thumbnail */}
+                <div className="flex size-9 items-center justify-center rounded-xl bg-[#121318] border border-white/5 overflow-hidden shrink-0">
+                  {gameMeta ? (
+                    <gameMeta.icon className="size-4 text-[#00d293]" />
+                  ) : (
+                    <Sparkles className="size-4 text-[#00d293]" />
+                  )}
+                </div>
+
+                {/* Middle Info */}
+                <div className="min-w-0 pr-1">
+                  <p className="text-xs font-bold text-white truncate max-w-[110px]">
+                    {gameMeta?.name ?? w.game}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
+                    <UserAvatar name={w.username} size={15} />
+                    <span className="truncate max-w-[70px]">{w.username}</span>
+                  </div>
+                </div>
+
+                {/* Right Win Amount in Emerald Green */}
+                <div className="flex items-center gap-1 text-xs font-mono font-bold text-[#00d293] shrink-0 bg-[#00d293]/10 border border-[#00d293]/20 px-2 py-1 rounded-lg">
+                  <Coin className="size-3.5" />
+                  <span>{fmt(w.payout)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Category Filter Bar: Unified dark pill navigation bar */}
+      <div className="flex items-center justify-between gap-3 rounded-full border border-white/5 bg-[#1a1d24] p-1.5 shadow-sm overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          {/* Active / Inactive tabs */}
+          <button
+            onClick={() => setActiveTab("all")}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all shrink-0",
+              activeTab === "all"
+                ? "bg-[#00d293] text-[#05261b] shadow-md shadow-[#00d293]/20"
+                : "text-muted-foreground hover:bg-[#222630] hover:text-white"
+            )}
+          >
+            <Layers className="size-3.5" />
+            <span>All Games</span>
+            <span
+              className={cn(
+                "rounded-full px-1.5 py-0.2 text-[10px] font-black",
+                activeTab === "all" ? "bg-[#05261b]/20 text-[#05261b]" : "bg-white/10 text-muted-foreground"
+              )}
+            >
+              {GAMES.length}+
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("originals")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all shrink-0",
+              activeTab === "originals"
+                ? "bg-[#00d293] text-[#05261b] shadow-md"
+                : "text-muted-foreground hover:bg-[#222630] hover:text-white"
+            )}
+          >
+            <Sparkles className="size-3.5 text-amber-400" />
+            <span>Originals</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("slots")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all shrink-0",
+              activeTab === "slots"
+                ? "bg-[#00d293] text-[#05261b] shadow-md"
+                : "text-muted-foreground hover:bg-[#222630] hover:text-white"
+            )}
+          >
+            <Plane className="size-3.5 text-cyan-400" />
+            <span>Slots</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("pvp")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all shrink-0",
+              activeTab === "pvp"
+                ? "bg-[#00d293] text-[#05261b] shadow-md"
+                : "text-muted-foreground hover:bg-[#222630] hover:text-white"
+            )}
+          >
+            <Swords className="size-3.5 text-rose-400" />
+            <span>PvP Duels</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("table")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all shrink-0",
+              activeTab === "table"
+                ? "bg-[#00d293] text-[#05261b] shadow-md"
+                : "text-muted-foreground hover:bg-[#222630] hover:text-white"
+            )}
+          >
+            <Spade className="size-3.5 text-indigo-400" />
+            <span>Table Games</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("hot")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all shrink-0",
+              activeTab === "hot"
+                ? "bg-[#00d293] text-[#05261b] shadow-md"
+                : "text-muted-foreground hover:bg-[#222630] hover:text-white"
+            )}
+          >
+            <Flame className="size-3.5 text-orange-400" />
+            <span>Hottest</span>
+          </button>
+        </div>
+
+        {/* Right side: Provider dropdown pill */}
+        <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/5 bg-[#121318] px-3.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-white hover:border-white/10 transition cursor-pointer shrink-0">
+          <Filter className="size-3 text-[#00d293]" />
+          <span>Select provider</span>
+          <ChevronRight className="size-3 text-muted-foreground" />
+        </div>
+      </div>
+
+      {/* 5. Game Grid Section Header: "🔥 Hottest Games" with next/prev arrows */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black tracking-tight text-foreground flex items-center gap-2">
-            Popular Games
+          <h2 className="flex items-center gap-2 text-lg sm:text-xl font-black tracking-tight text-white">
+            <span className="text-orange-400">🔥</span>
+            <span>
+              {activeTab === "all"
+                ? "Hottest Games"
+                : activeTab === "originals"
+                ? "Keno Originals"
+                : activeTab === "slots"
+                ? "Featured Slots"
+                : activeTab === "pvp"
+                ? "PvP Duels"
+                : activeTab === "table"
+                ? "Table & Live Games"
+                : "Hottest Games"}
+            </span>
           </h2>
+
           <div className="flex items-center gap-1.5">
-            <button className="grid size-8 place-items-center rounded-lg border border-border/60 bg-surface text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-all">
+            <button
+              onClick={() => {
+                const tabs: Array<typeof activeTab> = ["all", "originals", "slots", "pvp", "table", "hot"];
+                const idx = tabs.indexOf(activeTab);
+                setActiveTab(tabs[(idx - 1 + tabs.length) % tabs.length]);
+              }}
+              className="grid size-8 place-items-center rounded-full border border-white/5 bg-[#1a1d24] text-muted-foreground hover:bg-[#222630] hover:text-white transition cursor-pointer"
+            >
               <ChevronLeft className="size-4" />
             </button>
-            <button className="grid size-8 place-items-center rounded-lg border border-border/60 bg-surface text-muted-foreground hover:bg-surface-2 hover:text-foreground transition-all">
+            <button
+              onClick={() => {
+                const tabs: Array<typeof activeTab> = ["all", "originals", "slots", "pvp", "table", "hot"];
+                const idx = tabs.indexOf(activeTab);
+                setActiveTab(tabs[(idx + 1) % tabs.length]);
+              }}
+              className="grid size-8 place-items-center rounded-full border border-white/5 bg-[#1a1d24] text-muted-foreground hover:bg-[#222630] hover:text-white transition cursor-pointer"
+            >
               <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-          {POPULAR_GAMES.map((card) => (
-            <button
-              key={card.slug}
-              type="button"
-              onClick={() => navigate({ to: "/play/$slug", params: { slug: card.slug } })}
-              className={cn(
-                "group relative aspect-[4/3] rounded-2xl border p-4 flex flex-col justify-between text-left overflow-hidden transition-all duration-300 hover:-translate-y-1.5 bg-gradient-to-br",
-                card.bgGradient,
-                card.border,
-                card.glow
-              )}
-            >
-              {/* Top Badge */}
-              <div className="flex items-center justify-between">
-                <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-black tracking-wider uppercase shadow-sm", card.badgeColor)}>
-                  {card.badge}
-                </span>
-              </div>
-
-              {/* Center / Bottom 3D Icon Graphic */}
-              <div className="absolute right-2 bottom-2 opacity-85 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                <card.icon className={cn("size-16 sm:size-20", card.iconColor)} />
-              </div>
-
-              {/* Title */}
-              <div className="relative z-10 pt-4">
-                <span className="text-base sm:text-lg font-black tracking-wider text-white uppercase drop-shadow-md">
-                  {card.title}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
+        {/* Game Grid with 3:4 portrait ratio cards */}
+        <GameGrid games={filteredGames} />
       </section>
 
-      {/* Latest bet & Race Live Bets Table */}
+      {/* Live Bets Section */}
       <LiveBets />
-
-      {/* Keno Originals */}
-      <section className="space-y-4">
-        <SectionTitle icon={Flame}>Keno Originals</SectionTitle>
-        <GameGrid games={GAMES.filter((g) => g.category === "originals" && g.slug !== "baccarat")} />
-      </section>
-
-      {/* Player vs Player */}
-      <section className="space-y-4">
-        <SectionTitle icon={Swords}>Player vs Player Duels</SectionTitle>
-        <GameGrid games={GAMES.filter((g) => g.category === "pvp")} />
-      </section>
-
-      {/* Slots */}
-      <section className="space-y-4">
-        <SectionTitle icon={Plane}>Aviamasters & Slots</SectionTitle>
-        <GameGrid games={GAMES.filter((g) => g.category === "slots")} />
-      </section>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useApp } from "@/lib/app-context";
 import { GAME_BY_SLUG, gameName } from "@/lib/games/registry";
 import { UserAvatar, UserName, Coin } from "@/components/common/bits";
-import { fmt, fmtCompact } from "@/lib/format";
+import { fmt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Bet = Tables<"bets">;
@@ -20,7 +20,7 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
-          <tr className="border-b border-border/60 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
+          <tr className="border-b border-white/5 text-left text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
             <th className="px-5 py-3">Game</th>
             {showPlayer && <th className="px-5 py-3">Player Name</th>}
             <th className="px-5 py-3 text-right">Bet Amount</th>
@@ -28,7 +28,7 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
             <th className="px-5 py-3 text-right">Profit Amount</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border/30">
+        <tbody className="divide-y divide-white/5">
           {bets.map((b) => {
             const g = GAME_BY_SLUG[b.game];
             const netProfit = Number(b.payout) - Number(b.wager);
@@ -36,14 +36,14 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
             const mult = Number(b.multiplier);
 
             return (
-              <tr key={b.id} className="hover:bg-surface-2/40 transition-colors animate-fade-up">
+              <tr key={b.id} className="hover:bg-[#222630]/60 transition-colors animate-fade-up">
                 {/* Game */}
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-2.5 font-bold">
-                    <span className={cn("grid size-7 place-items-center rounded-lg shadow-sm shrink-0", g ? g.tone : "bg-primary/20 text-primary")}>
-                      {g ? <g.icon className="size-4" /> : <Sparkles className="size-4" />}
+                    <span className={cn("grid size-7 place-items-center rounded-xl shadow-sm shrink-0", g ? g.tone : "bg-[#00d293]/20 text-[#00d293]")}>
+                      {g ? <g.icon className="size-3.5" /> : <Sparkles className="size-3.5" />}
                     </span>
-                    <span className="text-foreground font-semibold">{gameName(b.game)}</span>
+                    <span className="text-white font-semibold">{gameName(b.game)}</span>
                   </div>
                 </td>
 
@@ -52,16 +52,16 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
                   <td className="px-5 py-3.5">
                     <button
                       onClick={() => openProfile(b.user_id)}
-                      className="flex items-center gap-2 font-medium hover:text-primary transition-colors"
+                      className="flex items-center gap-2 font-medium hover:text-[#00d293] transition-colors"
                     >
-                      <UserAvatar name={b.username} size={26} className="rounded-full ring-1 ring-border" />
-                      <UserName userId={b.user_id} name={b.username} className="text-foreground/90 font-medium" />
+                      <UserAvatar name={b.username} size={24} className="rounded-full ring-1 ring-white/10" />
+                      <UserName userId={b.user_id} name={b.username} className="text-white/90 font-medium" />
                     </button>
                   </td>
                 )}
 
                 {/* Bet Amount */}
-                <td className="px-5 py-3.5 text-right font-mono font-bold text-foreground">
+                <td className="px-5 py-3.5 text-right font-mono font-bold text-white">
                   <span className="inline-flex items-center gap-1.5 justify-end">
                     <Coin className="size-3.5" />
                     {fmt(b.wager)}
@@ -76,11 +76,11 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
                 {/* Profit Amount Pill */}
                 <td className="px-5 py-3.5 text-right font-mono font-bold">
                   {win ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-                      +{fmt(netProfit)} <ArrowUpRight className="size-3 text-emerald-400" />
+                    <span className="inline-flex items-center gap-1 text-[#00d293] bg-[#00d293]/10 border border-[#00d293]/25 px-2.5 py-0.5 rounded-full text-xs">
+                      +{fmt(netProfit)} <ArrowUpRight className="size-3 text-[#00d293]" />
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-rose-400/90 bg-rose-500/5 px-2 py-0.5 rounded-md">
+                    <span className="inline-flex items-center gap-1 text-rose-400/90 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full text-xs">
                       -{fmt(b.wager)} <ArrowDownRight className="size-3 text-rose-400/70" />
                     </span>
                   )}
@@ -118,44 +118,45 @@ export function LiveBets() {
   }, [tab, userId]);
 
   return (
-    <section className="mt-10 space-y-3">
+    <section className="mt-8 space-y-3">
       {/* Header with Sub-tabs and Filter */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-black tracking-tight text-foreground flex items-center gap-2">
-          Latest bet & Race
+        <h2 className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
+          <Activity className="size-5 text-[#00d293]" />
+          <span>Latest Bets & Race</span>
         </h2>
 
         <div className="flex items-center gap-2">
-          {/* Subtabs matching media_1795122310240_318d206c.jpg */}
-          <div className="flex rounded-xl bg-surface-2/80 p-1 border border-border/50 text-[11px] font-bold">
+          {/* Subtabs matching BelaBet pill style */}
+          <div className="flex rounded-full bg-[#1a1d24] p-1 border border-white/5 text-[11px] font-bold">
             <button
               onClick={() => setTab("all")}
-              className={cn("px-3 py-1.5 rounded-lg transition-all", tab === "all" ? "bg-surface text-foreground shadow-sm font-black" : "text-muted-foreground hover:text-foreground")}
+              className={cn("px-3.5 py-1.5 rounded-full transition-all", tab === "all" ? "bg-[#00d293] text-[#05261b] shadow-sm font-black" : "text-muted-foreground hover:text-white")}
             >
-              LATEST BETS
+              Latest Bets
             </button>
             <button
               onClick={() => setTab("high")}
-              className={cn("px-3 py-1.5 rounded-lg transition-all", tab === "high" ? "bg-surface text-foreground shadow-sm font-black" : "text-muted-foreground hover:text-foreground")}
+              className={cn("px-3.5 py-1.5 rounded-full transition-all", tab === "high" ? "bg-[#00d293] text-[#05261b] shadow-sm font-black" : "text-muted-foreground hover:text-white")}
             >
-              HIGH ROLLERS
+              High Rollers
             </button>
             <button
               onClick={() => setTab("race")}
-              className={cn("px-3 py-1.5 rounded-lg transition-all", tab === "race" ? "bg-surface text-foreground shadow-sm font-black" : "text-muted-foreground hover:text-foreground")}
+              className={cn("px-3.5 py-1.5 rounded-full transition-all", tab === "race" ? "bg-[#00d293] text-[#05261b] shadow-sm font-black" : "text-muted-foreground hover:text-white")}
             >
-              WAGER CONTEST
+              Wager Contest
             </button>
           </div>
 
-          <button className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-surface px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-all">
-            <Filter className="size-3.5" />
-            <span>FILTER</span>
+          <button className="flex items-center gap-1.5 rounded-full border border-white/5 bg-[#1a1d24] px-3.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-white hover:bg-[#222630] transition-all">
+            <Filter className="size-3 text-[#00d293]" />
+            <span>Filter</span>
           </button>
         </div>
       </div>
 
-      <div className="panel overflow-hidden border border-border/60 bg-surface/60 backdrop-blur-md rounded-2xl shadow-xl">
+      <div className="overflow-hidden border border-white/5 bg-[#1a1d24] backdrop-blur-md rounded-2xl shadow-xl">
         <BetsTable bets={bets} />
       </div>
     </section>

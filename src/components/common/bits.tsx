@@ -5,9 +5,15 @@ import { getFontFamily, getGlowClass } from "@/lib/cosmetics";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-2 select-none">
-      <img src="/logo-keno.png" alt="Keno" className="size-8 object-contain" />
-      {!compact && <span className="font-display text-2xl leading-none tracking-wider">KENO</span>}
+    <div className="flex items-center gap-2 select-none group">
+      <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#00d293] to-emerald-400 text-[#05261b] font-black text-xs shadow-md transition-transform group-hover:scale-105">
+        ⚡
+      </span>
+      {!compact && (
+        <span className="font-black italic text-xl md:text-2xl tracking-wider text-foreground">
+          EMBER
+        </span>
+      )}
     </div>
   );
 }

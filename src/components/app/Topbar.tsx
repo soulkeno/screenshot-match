@@ -1,304 +1,186 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, Search, Settings, MessageSquare, Vault, Loader2, Gamepad2, ChevronDown, ChevronRight, Star, History, Trophy, Sparkles, User, ShoppingBag } from "lucide-react";
+import { Menu, Search, Settings, MessageSquare, Vault, Loader2, Star, History, Trophy, Sparkles, User, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useApp } from "@/lib/app-context";
 import { GAMES } from "@/lib/games/registry";
-import { Amount, RankIcon, UserAvatar, UserName, SnowCap } from "@/components/common/bits";
+import { Amount, RankIcon, UserAvatar, UserName, Coin } from "@/components/common/bits";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEquippedStyles } from "@/lib/cosmetics";
 
 type P = { id: string; username: string; avatar_url: string | null; total_wagered: number };
 
-function GamesMenu() {
-  const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
-
-  const originals = GAMES.filter((g) => g.category === "originals" && g.slug !== "baccarat");
-  const cases = GAMES.filter((g) => g.slug === "cases" || g.slug === "case-battles");
-  const pvpAndMore = GAMES.filter((g) => g.slug === "pvp-coinflip" || g.slug === "mines-duel" || g.slug === "slots");
-
-  const selectGame = (slug: string) => {
-    setOpen(false);
-    navigate({ to: "/play/$slug", params: { slug } });
-  };
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            "flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-bold transition-all hover:bg-surface-2 hover:border-primary/50 shrink-0",
-            open ? "border-primary/60 bg-surface-2 text-primary shadow-sm" : "text-foreground"
-          )}
-        >
-          <Gamepad2 className="size-4 text-primary" />
-          <span>Games</span>
-          <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform duration-200", open && "rotate-180")} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        sideOffset={8}
-        className="w-[360px] sm:w-[420px] max-h-[82vh] overflow-y-auto p-4 border-border bg-popover/95 backdrop-blur-xl shadow-2xl rounded-2xl animate-fade-up no-scrollbar z-50"
-      >
-        {/* Quick Nav Bar */}
-        <div className="grid grid-cols-3 gap-1.5 pb-3 border-b border-border/60">
-          <Link
-            to="/favourites"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-surface px-2 py-2 text-xs font-semibold text-foreground/90 transition hover:bg-surface-2 hover:text-gold"
-          >
-            <Star className="size-3.5 text-gold fill-current" /> Favorites
-          </Link>
-          <Link
-            to="/recent"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-surface px-2 py-2 text-xs font-semibold text-foreground/90 transition hover:bg-surface-2 hover:text-accent"
-          >
-            <History className="size-3.5 text-accent" /> Recent
-          </Link>
-          <Link
-            to="/leaderboard"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-surface px-2 py-2 text-xs font-semibold text-foreground/90 transition hover:bg-surface-2 hover:text-primary"
-          >
-            <Trophy className="size-3.5 text-primary" /> Leaderboard
-          </Link>
-        </div>
-
-        {/* ORIGINALS */}
-        <div className="pt-3">
-          <p className="px-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Originals</p>
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            {originals.map((g) => (
-              <button
-                key={g.slug}
-                onClick={() => selectGame(g.slug)}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition hover:bg-surface-2 group"
-              >
-                <span className={cn("grid size-6 place-items-center rounded-md shrink-0 transition-transform group-hover:scale-110", g.tone)}>
-                  <g.icon className="size-3.5" />
-                </span>
-                <span className="truncate group-hover:text-primary transition-colors">{g.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* CASES */}
-        <div className="mt-4 pt-3 border-t border-border/60">
-          <p className="px-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Cases</p>
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            {cases.map((g) => (
-              <button
-                key={g.slug}
-                onClick={() => selectGame(g.slug)}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition hover:bg-surface-2 group"
-              >
-                <span className={cn("grid size-6 place-items-center rounded-md shrink-0 transition-transform group-hover:scale-110", g.tone)}>
-                  <g.icon className="size-3.5" />
-                </span>
-                <span className="truncate group-hover:text-primary transition-colors">{g.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* PVP & MORE */}
-        <div className="mt-4 pt-3 border-t border-border/60">
-          <p className="px-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">PvP & More</p>
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            {pvpAndMore.map((g) => (
-              <button
-                key={g.slug}
-                onClick={() => selectGame(g.slug)}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition hover:bg-surface-2 group"
-              >
-                <span className={cn("grid size-6 place-items-center rounded-md shrink-0 transition-transform group-hover:scale-110", g.tone)}>
-                  <g.icon className="size-3.5" />
-                </span>
-                <span className="truncate group-hover:text-primary transition-colors">{g.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 pt-3 border-t border-border/60">
-          <Link
-            to="/"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 transition"
-          >
-            <span>All games</span>
-            <ChevronRight className="size-3.5" />
-          </Link>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 export function Topbar({ onMenu }: { onMenu: () => void }) {
-  const { profile, balance, chatOpen, setChatOpen, setSettingsOpen, openProfile, setCosmeticsOpen, setWheelOpen } = useApp();
-  const equipped = useEquippedStyles(profile?.id ?? null);
+  const { profile, chatOpen, setChatOpen, setSettingsOpen, openProfile, setCosmeticsOpen } = useApp();
+  const equipped = useEquippedStyles();
+  const balance = profile?.balance ?? 0;
   const [q, setQ] = useState("");
-  const [avatarOpen, setAvatarOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const [players, setPlayers] = useState<P[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingP, setLoadingP] = useState(false);
   const [bump, setBump] = useState<"up" | "down" | null>(null);
-  const prev = useRef(balance);
-  const navigate = useNavigate();
+  const lastBal = useRef(balance);
   const box = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (balance !== prev.current) {
-      setBump(balance > prev.current ? "up" : "down");
-      prev.current = balance;
-      const t = setTimeout(() => setBump(null), 500);
-      return () => clearTimeout(t);
-    }
+    if (balance > lastBal.current) setBump("up");
+    else if (balance < lastBal.current) setBump("down");
+    lastBal.current = balance;
+    const t = setTimeout(() => setBump(null), 800);
+    return () => clearTimeout(t);
   }, [balance]);
 
   useEffect(() => {
-    if (q.trim().length < 2) { setPlayers([]); return; }
-    setLoading(true);
+    if (!q.trim()) { setPlayers([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from("profiles").select("id, username, avatar_url, total_wagered").ilike("username", `%${q.trim()}%`).limit(6);
-      setPlayers((data as P[]) ?? []);
-      setLoading(false);
-    }, 250);
+      setLoadingP(true);
+      const { data } = await supabase.from("profiles").select("id, username, avatar_url, total_wagered").ilike("username", `%${q}%`).limit(5);
+      setPlayers(data ?? []);
+      setLoadingP(false);
+    }, 200);
     return () => clearTimeout(t);
   }, [q]);
 
   useEffect(() => {
-    const h = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    const fn = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    window.addEventListener("mousedown", fn);
+    return () => window.removeEventListener("mousedown", fn);
   }, []);
 
   const games = q.trim() ? GAMES.filter((g) => g.name.toLowerCase().includes(q.toLowerCase())).slice(0, 5) : [];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[#1e1735]/80 bg-[#0d091a]/90 px-4 backdrop-blur-xl">
-      <button onClick={onMenu} className="rounded-lg p-2 text-muted-foreground hover:bg-white/5 hover:text-foreground lg:hidden" aria-label="Open menu"><Menu className="size-5" /></button>
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-white/5 bg-[#121318]/95 px-4 backdrop-blur-xl md:px-6">
+      {/* Left: Clean hamburger menu icon + bold italicized brand logo "EMBER" */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenu}
+          className="grid size-10 place-items-center rounded-full text-muted-foreground hover:bg-[#1a1d24] hover:text-foreground transition"
+          aria-label="Open menu"
+        >
+          <Menu className="size-5" />
+        </button>
 
-      {/* Nav Tabs (Matching media_1795122310240_318d206c.jpg) */}
-      <nav className="hidden lg:flex items-center gap-1 text-xs font-black tracking-wider uppercase text-muted-foreground mr-1">
-        <Link
-          to="/"
-          className="px-3 py-1.5 rounded-lg text-foreground hover:text-primary transition-colors"
-        >
-          HOME
+        <Link to="/" className="flex items-center gap-2 select-none group">
+          <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#00d293] to-emerald-400 text-[#05261b] font-black text-xs shadow-md transition-transform group-hover:scale-105">
+            ⚡
+          </span>
+          <span className="font-black italic text-xl md:text-2xl tracking-wider text-foreground">
+            EMBER
+          </span>
         </Link>
-        <GamesMenu />
-        <Link
-          to="/clubs"
-          className="px-3 py-1.5 rounded-lg text-amber-400/90 hover:text-amber-300 transition-colors"
-        >
-          CLUBS
-        </Link>
-        <Link
-          to="/rewards"
-          className="px-3 py-1.5 rounded-lg hover:text-foreground transition-colors"
-        >
-          REWARDS
-        </Link>
-        <Link
-          to="/vault"
-          className="px-3 py-1.5 rounded-lg hover:text-foreground transition-colors"
-        >
-          VAULT
-        </Link>
-      </nav>
+      </div>
 
-      <div ref={box} className="relative hidden w-full max-w-xs md:block">
+      {/* Center-Left: Pill-shaped search bar ("🔍 Search games...") with dark slate background */}
+      <div ref={box} className="relative hidden w-full max-w-xs md:block lg:max-w-sm">
         <div className="relative overflow-hidden rounded-full">
-          <Search className="absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/70 z-10" />
+          <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" />
           <input
             value={q}
             onChange={(e) => { setQ(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
-            placeholder="Search..."
-            className="h-9 w-full rounded-full border border-border/50 bg-[#16102a]/80 pl-9 pr-4 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary/60 focus:bg-[#1a1333]"
+            placeholder="Search games..."
+            className="h-10 w-full rounded-full border border-white/5 bg-[#1a1d24] pl-10 pr-4 text-xs font-medium text-foreground outline-none transition placeholder:text-muted-foreground/50 focus:border-[#00d293]/60 focus:bg-[#222630]"
           />
         </div>
+
         {open && q.trim() && (
-          <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-card animate-fade-up">
-            {games.length > 0 && <p className="px-3 pt-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Games</p>}
-            {games.map((g) => (
-              <button key={g.slug} onClick={() => { setOpen(false); setQ(""); navigate({ to: "/play/$slug", params: { slug: g.slug } }); }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-surface-2">
-                <span className={cn("grid size-7 place-items-center rounded-md", g.tone)}><g.icon className="size-4" /></span>{g.name}
+          <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-2xl border border-white/10 bg-[#1a1d24] shadow-2xl animate-fade-up">
+            <p className="px-3 pt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Games</p>
+            {games.length === 0 ? <p className="px-3 py-2 text-xs text-muted-foreground">No games found</p> : games.map((g) => (
+              <button key={g.slug} onClick={() => { setOpen(false); navigate({ to: "/play/$slug", params: { slug: g.slug } }); }}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs hover:bg-[#222630] transition">
+                <span className={cn("grid size-6 place-items-center rounded-md text-foreground", g.tone)}><g.icon className="size-3" /></span>
+                <span className="font-semibold">{g.name}</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">{g.category}</span>
               </button>
             ))}
-            <p className="px-3 pt-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Players</p>
-            {loading && <div className="px-3 py-2 text-sm text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /></div>}
-            {!loading && players.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">{q.trim().length < 2 ? "Type 2+ letters" : "No players found"}</p>}
-            {players.map((p) => (
-              <button key={p.id} onClick={() => { setOpen(false); setQ(""); openProfile(p.id); }} className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-surface-2">
-                <UserAvatar name={p.username} url={p.avatar_url} size={28} />
+            <p className="border-t border-white/5 px-3 pt-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Players</p>
+            {loadingP && <div className="p-3"><Loader2 className="mx-auto size-4 animate-spin text-muted-foreground" /></div>}
+            {!loadingP && players.length === 0 && <p className="px-3 py-2 text-xs text-muted-foreground">No players found</p>}
+            {!loadingP && players.map((p) => (
+              <button key={p.id} onClick={() => { setOpen(false); openProfile(p.id); }}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs hover:bg-[#222630] transition">
+                <UserAvatar name={p.username} url={p.avatar_url} size={24} />
                 <UserName userId={p.id} name={p.username} className="flex-1 font-medium truncate" />
-                <RankIcon wagered={p.total_wagered} size={20} />
+                <RankIcon wagered={p.total_wagered} size={18} />
               </button>
             ))}
-            <div className="h-2" />
+            <div className="h-1.5" />
           </div>
         )}
       </div>
 
-      <div className="mx-auto flex items-center rounded-full border border-border/50 bg-[#16102a]/80 py-1 px-3 md:mx-0 md:ml-auto md:mr-auto shadow-sm">
-        <Amount value={balance} className={cn("text-xs font-mono font-bold transition-colors", bump === "up" && "text-success", bump === "down" && "text-destructive")} />
-        <Link to="/vault" className="ml-2.5 rounded-full bg-primary/20 px-2.5 py-0.5 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors flex items-center gap-1">
-          <Vault className="size-3" /> Vault
-        </Link>
-      </div>
+      {/* Right Controls */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Currency selector pill */}
+        <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/5 bg-[#1a1d24] px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-[#222630] transition cursor-pointer select-none">
+          <span className="text-sm leading-none">🇬🇧</span>
+          <span className="font-bold text-foreground text-[11px]">USD</span>
+        </div>
 
-      <div className="flex items-center gap-1.5">
-        <button onClick={() => setChatOpen(!chatOpen)} className={cn("rounded-lg border border-border p-2.5 transition-colors hover:bg-surface-2", chatOpen ? "text-primary" : "text-muted-foreground")} aria-label="Toggle chat">
-          <MessageSquare className="size-4" />
-        </button>
-        <button onClick={() => setSettingsOpen(true)} className="rounded-lg border border-border p-2.5 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground" aria-label="Settings">
-          <Settings className="size-4" />
-        </button>
+        {/* Balance pill with gold coin icon + balance amount */}
+        <div className="flex items-center gap-2 rounded-full border border-white/5 bg-[#1a1d24] px-3.5 py-1.5 shadow-sm">
+          <Coin className="size-4" />
+          <Amount
+            value={balance}
+            className={cn("text-xs font-mono font-bold transition-colors", bump === "up" && "text-[#00d293]", bump === "down" && "text-destructive")}
+          />
+        </div>
+
+        {/* Bright emerald-teal pill button "● Deposit" / "Wallet" */}
+        <Link
+          to="/vault"
+          className="flex items-center gap-1.5 rounded-full bg-[#00d293] hover:bg-[#00d293]/90 text-[#05261b] px-4 py-1.5 text-xs font-black shadow-md transition-all hover:scale-105 shrink-0"
+        >
+          <span className="size-2 rounded-full bg-[#05261b] animate-pulse" />
+          <span>Deposit</span>
+        </Link>
+
+        {/* Player avatar with status ring + username */}
         {profile && (
           <Popover open={avatarOpen} onOpenChange={setAvatarOpen}>
             <PopoverTrigger asChild>
               <button
-                className="relative ml-1 rounded-full p-0.5 ring-2 ring-transparent transition hover:ring-primary/60 focus:outline-none"
+                className="flex items-center gap-2 rounded-full border border-white/5 bg-[#1a1d24] pl-1 pr-3 py-1 text-xs font-bold text-foreground hover:bg-[#222630] transition shrink-0 group focus:outline-none"
                 aria-label="Account & Cosmetics menu"
               >
-                <UserAvatar name={profile.username} url={profile.avatar_url} size={38} />
+                <div className="relative rounded-full ring-2 ring-[#00d293] p-0.5 transition-transform group-hover:scale-105">
+                  <UserAvatar name={profile.username} url={profile.avatar_url} size={26} />
+                </div>
+                <span className="hidden md:inline font-bold text-foreground truncate max-w-[100px]">
+                  {profile.username}
+                </span>
               </button>
             </PopoverTrigger>
             <PopoverContent
               align="end"
               sideOffset={8}
-              className="w-60 p-2 border-border bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl animate-fade-up z-50"
+              className="w-64 p-2 border border-white/10 bg-[#1a1d24]/95 backdrop-blur-xl rounded-2xl shadow-2xl animate-fade-up z-50 text-foreground"
             >
-              <div className="flex items-center gap-3 p-2.5 border-b border-border/60 pb-3 mb-1">
-                <UserAvatar name={profile.username} url={profile.avatar_url} size={40} />
+              <div className="flex items-center gap-3 p-2.5 border-b border-white/5 pb-3 mb-1">
+                <div className="relative rounded-full ring-2 ring-[#00d293] p-0.5">
+                  <UserAvatar name={profile.username} url={profile.avatar_url} size={36} />
+                </div>
                 <div className="min-w-0 flex-1">
                   <UserName userId={profile.id} name={profile.username} font={equipped.fontFamily} glow={equipped.glowClass} className="text-sm font-bold truncate block" />
                   <p className="text-[11px] text-muted-foreground truncate">Player Profile</p>
                 </div>
               </div>
 
-              {/* User Avatar Click -> Cosmetics Button as requested */}
               <button
                 onClick={() => {
                   setAvatarOpen(false);
                   setCosmeticsOpen(true);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition bg-gradient-primary/10 text-primary hover:bg-gradient-primary/20 group my-1 border border-primary/20"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-bold transition bg-[#00d293]/15 text-[#00d293] hover:bg-[#00d293]/25 group my-1 border border-[#00d293]/30"
               >
-                <Sparkles className="size-4 text-primary group-hover:rotate-12 transition-transform" />
+                <Sparkles className="size-4 text-[#00d293] group-hover:rotate-12 transition-transform" />
                 <span>Cosmetics</span>
-                <span className="ml-auto text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full shadow-sm">
+                <span className="ml-auto text-[10px] font-bold uppercase tracking-wider bg-[#00d293] text-[#05261b] px-2 py-0.5 rounded-full shadow-sm">
                   Equip
                 </span>
               </button>
@@ -306,7 +188,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
               <Link
                 to="/shop"
                 onClick={() => setAvatarOpen(false)}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition hover:bg-surface-2 text-foreground"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold transition hover:bg-[#222630] text-foreground"
               >
                 <ShoppingBag className="size-4 text-accent" />
                 <span>Shop</span>
@@ -317,7 +199,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
                   setAvatarOpen(false);
                   openProfile(profile.id);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition hover:bg-surface-2 text-foreground"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold transition hover:bg-[#222630] text-foreground"
               >
                 <User className="size-4 text-muted-foreground" />
                 <span>My Profile</span>
@@ -328,7 +210,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
                   setAvatarOpen(false);
                   setSettingsOpen(true);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition hover:bg-surface-2 text-foreground"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold transition hover:bg-[#222630] text-foreground"
               >
                 <Settings className="size-4 text-muted-foreground" />
                 <span>Settings</span>
@@ -336,6 +218,18 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             </PopoverContent>
           </Popover>
         )}
+
+        {/* Chat toggle button icon */}
+        <button
+          onClick={() => setChatOpen(!chatOpen)}
+          className={cn(
+            "grid size-10 place-items-center rounded-full border border-white/5 bg-[#1a1d24] text-muted-foreground transition hover:bg-[#222630] hover:text-foreground shrink-0",
+            chatOpen && "text-[#00d293] border-[#00d293]/40 bg-[#00d293]/10"
+          )}
+          aria-label="Toggle chat"
+        >
+          <MessageSquare className="size-4" />
+        </button>
       </div>
     </header>
   );

@@ -133,15 +133,15 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <aside className="flex h-full w-full flex-col border-l border-[#1e1735]/80 bg-[#0d091a]/95 backdrop-blur-xl">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#1e1735]/80 px-4">
+    <aside className="flex h-full w-full flex-col border-l border-white/5 bg-[#0e0f14]">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/5 px-4">
         <div className="flex items-center gap-2">
-          <h3 className="font-bold text-foreground">Chat</h3>
-          <span className="flex items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-success animate-pulse-ring" />{online} online
+          <h3 className="font-bold text-white text-sm">Chat</h3>
+          <span className="flex items-center gap-1.5 rounded-full bg-[#1a1d24] px-2.5 py-0.5 text-xs text-muted-foreground border border-white/5">
+            <span className="size-1.5 rounded-full bg-[#00d293] animate-pulse-ring" />{online} online
           </span>
         </div>
-        <button onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-foreground" aria-label="Hide chat"><X className="size-4" /></button>
+        <button onClick={onClose} className="rounded-full p-1.5 text-muted-foreground hover:bg-[#1a1d24] hover:text-white transition" aria-label="Hide chat"><X className="size-4" /></button>
       </div>
 
       <RainCard />
@@ -158,25 +158,25 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div className="shrink-0 border-t border-[#1e1735]/80 p-3">
-        <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-[#16102a]/80 px-2 focus-within:border-primary/50">
+      <div className="shrink-0 border-t border-white/5 p-3">
+        <div className="flex items-center gap-2 rounded-full border border-white/5 bg-[#1a1d24] px-3 py-1 focus-within:border-[#00d293]/50">
           <input value={text} onChange={(e) => setText(e.target.value.slice(0, 200))} onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder={profile?.banned_until ? "You can't chat right now" : "Type Message..."} className="h-11 min-w-0 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground/50" />
+            placeholder={profile?.banned_until ? "You can't chat right now" : "Send a message..."} className="h-9 min-w-0 flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground/60 text-white" />
           <Popover>
             <PopoverTrigger asChild>
-              <button className="rounded-md p-1.5 text-muted-foreground hover:bg-surface-2 hover:text-primary" aria-label="Emojis and rain"><Smile className="size-4" /></button>
+              <button className="rounded-full p-1.5 text-muted-foreground hover:bg-[#222630] hover:text-[#00d293] transition" aria-label="Emojis and rain"><Smile className="size-4" /></button>
             </PopoverTrigger>
-            <PopoverContent side="top" align="end" className="w-72 border-border bg-popover p-3">
+            <PopoverContent side="top" align="end" className="w-72 border-white/10 bg-[#1a1d24] p-3 text-foreground rounded-2xl shadow-2xl">
               <div className="grid grid-cols-8 gap-1">
                 {EMOJIS.map((e) => (
-                  <button key={e} onClick={() => setText((t) => (t + e).slice(0, 200))} className="rounded-md p-1 text-lg transition hover:scale-110 hover:bg-surface-2">{e}</button>
+                  <button key={e} onClick={() => setText((t) => (t + e).slice(0, 200))} className="rounded-md p-1 text-lg transition hover:scale-110 hover:bg-[#222630]">{e}</button>
                 ))}
               </div>
-              <Button variant="surface" className="mt-3 w-full" onClick={() => setRainOpen(true)}><CloudRain /> Start a rain</Button>
+              <Button variant="surface" className="mt-3 w-full rounded-full border border-white/10 hover:border-[#00d293]/40" onClick={() => setRainOpen(true)}><CloudRain className="text-[#00d293]" /> Start a rain</Button>
             </PopoverContent>
           </Popover>
-          <button onClick={send} disabled={!text.trim() || sending} className="rounded-md p-1.5 text-primary transition hover:bg-surface-2 disabled:opacity-40" aria-label="Send">
-            {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+          <button onClick={send} disabled={!text.trim() || sending} className="rounded-full p-2 text-[#05261b] bg-[#00d293] hover:bg-[#00d293]/90 transition disabled:opacity-40" aria-label="Send">
+            {sending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
           </button>
         </div>
         <div className="mt-1.5 flex justify-between px-1 text-[11px] text-muted-foreground">
