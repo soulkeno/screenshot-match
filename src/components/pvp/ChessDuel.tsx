@@ -168,8 +168,8 @@ function ChessBoardView({
 
   // Valid target squares for the currently selected piece
   const legalMovesForSelected = useMemo(() => {
-    if (!selectedSquare || !myTurn) return [];
-    return chess.moves({ square: selectedSquare as any, verbose: true }).map((m) => m.to);
+    if (!selectedSquare || !myTurn) return [] as string[];
+    return chess.moves({ square: selectedSquare as any, verbose: true }).map((m) => m.to as string);
   }, [chess, selectedSquare, myTurn]);
 
   // Handle Square Click
