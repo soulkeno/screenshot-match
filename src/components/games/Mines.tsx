@@ -187,7 +187,7 @@ export default function Mines() {
               <button
                 type="button"
                 disabled={active || busy || autoRunning}
-                onClick={() => setBet((b) => String(Math.max(1, Math.floor(Number(b) / 2))))}
+                onClick={() => setBet(String(Math.max(1, Math.floor(Number(bet) / 2))))}
                 className="rounded bg-surface px-2 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 1/2
@@ -195,7 +195,7 @@ export default function Mines() {
               <button
                 type="button"
                 disabled={active || busy || autoRunning}
-                onClick={() => setBet((b) => String(Math.floor(Number(b) * 2)))}
+                onClick={() => setBet(String(Math.floor(Number(bet) * 2)))}
                 className="rounded bg-surface px-2 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 x2

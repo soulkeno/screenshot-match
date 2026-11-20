@@ -392,8 +392,9 @@ export async function sessionStart(userId: string, game: string, wagerIn: number
       const sidebetTotal = pairsBet + plus3Bet;
       if (sidebetTotal > 0) {
         state.extraWager = sidebetTotal;
-        const pairsRes = pairsBet > 0 ? L.evaluatePerfectPairs(p1, p2) : { hit: false, payoutMult: 0, type: "none" as const };
-        const plus3Res = plus3Bet > 0 ? L.evaluate21Plus3(p1, p2, d1) : { hit: false, payoutMult: 0, type: "none" as const };
+        const sideRes = (r: { won: boolean; mult: number; label?: string }) => ({ hit: r.won, payoutMult: r.mult, type: r.label ?? "none" });
+        const pairsRes = pairsBet > 0 ? sideRes(L.evaluatePerfectPairs(p1, p2)) : { hit: false, payoutMult: 0, type: "none" };
+        const plus3Res = plus3Bet > 0 ? sideRes(L.evaluate21Plus3(p1, p2, d1)) : { hit: false, payoutMult: 0, type: "none" };
         const sidebetPayout = (pairsRes.hit ? pairsBet * pairsRes.payoutMult : 0) + (plus3Res.hit ? plus3Bet * plus3Res.payoutMult : 0);
         state.sidebets = {
           pairs: { bet: pairsBet, ...pairsRes },
