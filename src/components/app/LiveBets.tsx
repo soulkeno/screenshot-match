@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Activity } from "lucide-react";
+import { Activity, Filter, ArrowUpRight, ArrowDownRight, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useApp } from "@/lib/app-context";
@@ -12,10 +12,13 @@ type Bet = Tables<"bets">;
 
 export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer?: boolean }) {
   const { openProfile } = useApp();
-  if (bets.length === 0) return <p className="px-4 py-10 text-center text-sm text-muted-foreground">No bets yet — be the first to play.</p>;
+  if (bets.length === 0) {
+    return <p className="px-4 py-12 text-center text-sm text-muted-foreground">No bets recorded yet — play a game to kick off the race!</p>;
+  }
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-white/5 text-left text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
             <th className="px-5 py-3">Game</th>
@@ -28,7 +31,10 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
         <tbody className="divide-y divide-white/5">
           {bets.map((b) => {
             const g = GAME_BY_SLUG[b.game];
-            const win = Number(b.payout) > Number(b.wager);
+            const netProfit = Number(b.payout) - Number(b.wager);
+            const win = netProfit > 0;
+            const mult = Number(b.multiplier);
+
             return (
               <tr key={b.id} className="hover:bg-[#222630]/60 transition-colors animate-fade-up">
                 {/* Game */}
@@ -40,6 +46,8 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
                     <span className="text-white font-semibold">{gameName(b.game)}</span>
                   </div>
                 </td>
+
+                {/* Player */}
                 {showPlayer && (
                   <td className="px-5 py-3.5">
                     <button
@@ -88,22 +96,24 @@ export function BetsTable({ bets, showPlayer = true }: { bets: Bet[]; showPlayer
 
 export function LiveBets() {
   const { userId } = useApp();
-  const [tab, setTab] = useState<"all" | "mine" | "big">("all");
+  const [tab, setTab] = useState<"all" | "high" | "race">("all");
   const [bets, setBets] = useState<Bet[]>([]);
 
   useEffect(() => {
     let q = supabase.from("bets").select("*").order("created_at", { ascending: false }).limit(15);
-    if (tab === "mine" && userId) q = q.eq("user_id", userId);
-    if (tab === "big") q = q.gte("multiplier", 5);
+    if (tab === "high") q = q.gte("multiplier", 5);
+    if (tab === "race") q = q.gte("wager", 1000);
     void q.then(({ data }) => setBets(data ?? []));
+
     const ch = supabase.channel(`bets-${tab}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "bets" }, (pl) => {
         const b = pl.new as Bet;
-        if (tab === "mine" && b.user_id !== userId) return;
-        if (tab === "big" && Number(b.multiplier) < 5) return;
+        if (tab === "high" && Number(b.multiplier) < 5) return;
+        if (tab === "race" && Number(b.wager) < 1000) return;
         setBets((prev) => [b, ...prev].slice(0, 15));
       })
       .subscribe();
+
     return () => { void supabase.removeChannel(ch); };
   }, [tab, userId]);
 
