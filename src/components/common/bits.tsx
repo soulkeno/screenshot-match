@@ -6,12 +6,14 @@ import { getFontFamily, getGlowClass } from "@/lib/cosmetics";
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2 select-none group">
-      <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#00d293] to-emerald-400 text-[#05261b] font-black text-xs shadow-md transition-transform group-hover:scale-105">
-        ⚡
-      </span>
+      <img
+        src="/logo-keno.png"
+        alt="Keno"
+        className="size-8 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+      />
       {!compact && (
         <span className="font-black italic text-xl md:text-2xl tracking-wider text-foreground">
-          EMBER
+          KENO
         </span>
       )}
     </div>
@@ -190,11 +192,23 @@ export function Coin({ className }: { className?: string }) {
   );
 }
 
-export function Amount({ value, compact, className, signed }: { value: number | string; compact?: boolean; className?: string; signed?: boolean }) {
+export function Amount({
+  value,
+  compact = true,
+  className,
+  signed,
+  showCoin = true,
+}: {
+  value: number | string;
+  compact?: boolean;
+  className?: string;
+  signed?: boolean;
+  showCoin?: boolean;
+}) {
   const v = Number(value);
   return (
-    <span className={cn("inline-flex items-center gap-1.5 font-semibold tabular", className)}>
-      <Coin />
+    <span className={cn("inline-flex items-center gap-1.5 font-bold tabular", className)}>
+      {showCoin && <Coin />}
       {signed && v > 0 ? "+" : ""}
       {compact ? fmtCompact(v) : fmt(v)}
     </span>

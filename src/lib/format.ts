@@ -10,7 +10,7 @@ export function fmtCompact(n: number | string | null | undefined): string {
   const a = Math.abs(v);
   if (a >= 1e9) return (v / 1e9).toFixed(2).replace(/\.?0+$/, "") + "B";
   if (a >= 1e6) return (v / 1e6).toFixed(2).replace(/\.?0+$/, "") + "M";
-  if (a >= 1e4) return (v / 1e3).toFixed(1).replace(/\.?0+$/, "") + "K";
+  if (a >= 1e3) return (v / 1e3).toFixed(1).replace(/\.?0+$/, "") + "k";
   return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 export function fmtMult(n: number | string): string {

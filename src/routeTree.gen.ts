@@ -15,6 +15,7 @@ import { Route as ClubsRouteImport } from './routes/clubs'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as RakebackRouteImport } from './routes/rakeback'
+import { Route as RankProgressionRouteImport } from './routes/rank-progression'
 import { Route as RecentRouteImport } from './routes/recent'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ShopRouteImport } from './routes/shop'
@@ -51,6 +52,11 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
 const RakebackRoute = RakebackRouteImport.update({
   id: '/rakeback',
   path: '/rakeback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankProgressionRoute = RankProgressionRouteImport.update({
+  id: '/rank-progression',
+  path: '/rank-progression',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecentRoute = RecentRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/favourites': typeof FavouritesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/rakeback': typeof RakebackRoute
+  '/rank-progression': typeof RankProgressionRoute
   '/recent': typeof RecentRoute
   '/rewards': typeof RewardsRoute
   '/shop': typeof ShopRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/favourites': typeof FavouritesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/rakeback': typeof RakebackRoute
+  '/rank-progression': typeof RankProgressionRoute
   '/recent': typeof RecentRoute
   '/rewards': typeof RewardsRoute
   '/shop': typeof ShopRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/favourites': typeof FavouritesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/rakeback': typeof RakebackRoute
+  '/rank-progression': typeof RankProgressionRoute
   '/recent': typeof RecentRoute
   '/rewards': typeof RewardsRoute
   '/shop': typeof ShopRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/leaderboard'
     | '/rakeback'
+    | '/rank-progression'
     | '/recent'
     | '/rewards'
     | '/shop'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/leaderboard'
     | '/rakeback'
+    | '/rank-progression'
     | '/recent'
     | '/rewards'
     | '/shop'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/leaderboard'
     | '/rakeback'
+    | '/rank-progression'
     | '/recent'
     | '/rewards'
     | '/shop'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   FavouritesRoute: typeof FavouritesRoute
   LeaderboardRoute: typeof LeaderboardRoute
   RakebackRoute: typeof RakebackRoute
+  RankProgressionRoute: typeof RankProgressionRoute
   RecentRoute: typeof RecentRoute
   RewardsRoute: typeof RewardsRoute
   ShopRoute: typeof ShopRoute
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/rakeback'
       fullPath: '/rakeback'
       preLoaderRoute: typeof RakebackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rank-progression': {
+      id: '/rank-progression'
+      path: '/rank-progression'
+      fullPath: '/rank-progression'
+      preLoaderRoute: typeof RankProgressionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recent': {
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   FavouritesRoute: FavouritesRoute,
   LeaderboardRoute: LeaderboardRoute,
   RakebackRoute: RakebackRoute,
+  RankProgressionRoute: RankProgressionRoute,
   RecentRoute: RecentRoute,
   RewardsRoute: RewardsRoute,
   ShopRoute: ShopRoute,

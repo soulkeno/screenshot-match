@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenu={() => setMobileNav(true)} />
         <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1400px] p-4 md:p-6">{children}</div>
+          <div className="mx-auto w-full max-w-[1120px] p-4 md:p-6">{children}</div>
         </main>
       </div>
       <div className={cn("hidden shrink-0 transition-[width] duration-200 md:block", chatOpen ? "w-[340px]" : "w-0 overflow-hidden")}>

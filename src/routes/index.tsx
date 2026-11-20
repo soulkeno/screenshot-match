@@ -263,7 +263,7 @@ export function Home() {
               <div
                 key={w.id}
                 onClick={() => navigate({ to: "/play/$slug", params: { slug: w.game } })}
-                className="relative flex items-center gap-3 rounded-2xl border border-white/5 bg-[#1a1d24] px-3.5 py-2.5 shrink-0 shadow-sm hover:border-[#00d293]/30 hover:bg-[#222630] transition cursor-pointer select-none"
+                className="relative flex items-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-b from-[#1c202a] to-[#141720] shadow-[0_6px_16px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] px-3.5 py-2.5 shrink-0 hover:border-[#00d293]/40 hover:scale-[1.02] transition cursor-pointer select-none"
               >
                 {/* Hot Badge */}
                 {w.hot && (
@@ -273,7 +273,7 @@ export function Home() {
                 )}
 
                 {/* Game Thumbnail */}
-                <div className="flex size-9 items-center justify-center rounded-xl bg-[#121318] border border-white/5 overflow-hidden shrink-0">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-[#121318] border border-white/5 overflow-hidden shrink-0 shadow-inner">
                   {gameMeta ? (
                     <gameMeta.icon className="size-4 text-[#00d293]" />
                   ) : (
@@ -293,9 +293,9 @@ export function Home() {
                 </div>
 
                 {/* Right Win Amount in Emerald Green */}
-                <div className="flex items-center gap-1 text-xs font-mono font-bold text-[#00d293] shrink-0 bg-[#00d293]/10 border border-[#00d293]/20 px-2 py-1 rounded-lg">
+                <div className="flex items-center gap-1 text-xs font-mono font-bold text-[#00d293] shrink-0 bg-[#00d293]/15 border border-[#00d293]/30 px-2.5 py-1 rounded-full shadow-sm">
                   <Coin className="size-3.5" />
-                  <span>{fmt(w.payout)}</span>
+                  <span>{fmtCompact(w.payout)}</span>
                 </div>
               </div>
             );

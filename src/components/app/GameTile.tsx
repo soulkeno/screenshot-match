@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Star, Play, Info } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Star, Play } from "lucide-react";
 import type { GameMeta } from "@/lib/games/registry";
 import { useApp } from "@/lib/app-context";
 import { cn } from "@/lib/utils";
@@ -30,20 +30,19 @@ const GAME_COVERS: Record<string, string> = {
 
 function getBadge(g: GameMeta): { text: string; bg: string } | null {
   if (g.slug === "crash" || g.slug === "mines" || g.slug === "slots") {
-    return { text: "HOT", bg: "bg-rose-500 text-white" };
+    return { text: "HOT", bg: "bg-rose-500 text-white shadow-rose-500/30" };
   }
   if (g.slug === "chess" || g.slug === "case-battles") {
-    return { text: "NEW", bg: "bg-[#00d293] text-[#05261b]" };
+    return { text: "NEW", bg: "bg-[#00d293] text-[#05261b] shadow-emerald-500/30" };
   }
   if (g.category === "pvp") {
-    return { text: "PVP", bg: "bg-indigo-500 text-white" };
+    return { text: "PVP", bg: "bg-indigo-500 text-white shadow-indigo-500/30" };
   }
   return null;
 }
 
 export function GameTile({ g }: { g: GameMeta }) {
   const { favorites, toggleFavorite } = useApp();
-  const navigate = useNavigate();
   const fav = favorites.has(g.slug);
   const cover = GAME_COVERS[g.slug];
   const badge = getBadge(g);
@@ -52,7 +51,7 @@ export function GameTile({ g }: { g: GameMeta }) {
     <div className="group relative select-none">
       <div
         className={cn(
-          "relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-[#1a1d24] shadow-card transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-[#00d293]/40 group-hover:shadow-[0_12px_30px_rgba(0,210,147,0.15)]",
+          "relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#1c202a] to-[#141720] shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-[#00d293]/40 group-hover:shadow-[0_12px_32px_rgba(0,210,147,0.2)]",
           !cover && g.tone
         )}
       >
@@ -80,7 +79,7 @@ export function GameTile({ g }: { g: GameMeta }) {
               {badge.text}
             </span>
           ) : (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/60 bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 bg-black/50 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-white/5">
               {g.category === "pvp" ? "PvP" : g.category === "slots" ? "Slots" : "Original"}
             </span>
           )}
@@ -93,7 +92,7 @@ export function GameTile({ g }: { g: GameMeta }) {
             }}
             aria-label="Favourite"
             className={cn(
-              "grid size-7 place-items-center rounded-full bg-black/50 text-white/80 backdrop-blur transition-all hover:scale-110 hover:text-amber-400",
+              "grid size-7 place-items-center rounded-full bg-black/60 text-white/80 backdrop-blur transition-all hover:scale-110 hover:text-amber-400 border border-white/10",
               fav && "text-amber-400 fill-current opacity-100"
             )}
           >
@@ -111,29 +110,20 @@ export function GameTile({ g }: { g: GameMeta }) {
           </p>
         </div>
 
-        {/* Hover State: Dark gradient overlay revealing primary teal "▶ Play" and secondary "Demo" button */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2.5 bg-black/75 p-3 opacity-0 backdrop-blur-xs transition-all duration-300 group-hover:opacity-100">
-          <p className="font-bold text-sm text-white tracking-wide text-center px-2 line-clamp-1">
+        {/* Hover State: Dark gradient overlay revealing primary teal "▶ Play" button ONLY */}
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/75 p-3 opacity-0 backdrop-blur-xs transition-all duration-300 group-hover:opacity-100">
+          <p className="font-bold text-sm text-white tracking-wide text-center px-2 line-clamp-1 mb-1">
             {g.name}
           </p>
 
           <Link
             to="/play/$slug"
             params={{ slug: g.slug }}
-            className="flex items-center gap-1.5 rounded-full bg-[#00d293] hover:bg-[#00d293]/90 text-[#05261b] px-5 py-2 text-xs font-black shadow-lg transition-transform hover:scale-105 cursor-pointer w-full justify-center max-w-[130px]"
+            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#00d293] to-emerald-400 hover:from-[#00d293]/95 hover:to-emerald-300 text-[#05261b] px-6 py-2.5 text-xs font-black shadow-[0_4px_16px_rgba(0,210,147,0.4)] transition-transform hover:scale-105 cursor-pointer w-full justify-center max-w-[130px]"
           >
             <Play className="size-3.5 fill-current" />
             <span>Play</span>
           </Link>
-
-          <button
-            type="button"
-            onClick={() => navigate({ to: "/play/$slug", params: { slug: g.slug } })}
-            className="flex items-center gap-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold px-4 py-1.5 transition-colors cursor-pointer w-full justify-center max-w-[130px]"
-          >
-            <Info className="size-3" />
-            <span>Demo / Info</span>
-          </button>
         </div>
       </div>
     </div>

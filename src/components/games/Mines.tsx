@@ -36,6 +36,15 @@ export default function Mines() {
   const [autoRunning, setAutoRunning] = useState(false);
   const autoRunningRef = useRef(false);
 
+  // Advanced On Win / On Loss martingale settings (Matching image 3)
+  const [advOpen, setAdvOpen] = useState(true);
+  const [onWinAction, setOnWinAction] = useState<"reset" | "increase">("reset");
+  const [onWinPercent, setOnWinPercent] = useState("0");
+  const [onLossAction, setOnLossAction] = useState<"reset" | "increase">("reset");
+  const [onLossPercent, setOnLossPercent] = useState("0");
+  const [stopOnWin, setStopOnWin] = useState("0.00");
+  const [stopOnLoss, setStopOnLoss] = useState("0.00");
+
   const totalTiles = active ? (session.totalTiles || 25) : gridSize;
   const currentGridOption = GRID_OPTIONS.find((g) => g.value === totalTiles) || GRID_OPTIONS[1];
   const maxMines = totalTiles - 1;
@@ -164,9 +173,12 @@ export default function Mines() {
     setAutoRunning(true);
     autoRunningRef.current = true;
     let roundsLeft = Math.max(1, parseInt(autoBets) || 10);
+    let currentBet = Number(bet);
+    const baseBet = currentBet;
+    let totalProfit = 0;
 
     while (roundsLeft > 0 && autoRunningRef.current) {
-      const startRes = await begin(Number(bet), { mines: safeMines, gridSize });
+      const startRes = await begin(currentBet, { mines: safeMines, gridSize });
       if (!startRes) break;
       sfx.bet();
 
@@ -184,8 +196,33 @@ export default function Mines() {
 
       if (!lost && autoRunningRef.current) {
         await new Promise((res) => setTimeout(res, 100));
-        await action("cashout");
+        const cashRes = await action("cashout");
         sfx.cashout();
+        const pOut = cashRes ? Number(cashRes.session.payout) : currentBet * projectedMult;
+        totalProfit += pOut - currentBet;
+
+        // On win calculation
+        if (onWinAction === "increase" && Number(onWinPercent) > 0) {
+          currentBet = Math.max(1, Math.round(currentBet * (1 + Number(onWinPercent) / 100)));
+        } else {
+          currentBet = baseBet;
+        }
+      } else {
+        totalProfit -= currentBet;
+        // On loss calculation
+        if (onLossAction === "increase" && Number(onLossPercent) > 0) {
+          currentBet = Math.max(1, Math.round(currentBet * (1 + Number(onLossPercent) / 100)));
+        } else {
+          currentBet = baseBet;
+        }
+      }
+
+      // Check Stop on win / loss
+      if (Number(stopOnWin) > 0 && totalProfit >= Number(stopOnWin)) {
+        break;
+      }
+      if (Number(stopOnLoss) > 0 && totalProfit <= -Number(stopOnLoss)) {
+        break;
       }
 
       roundsLeft--;
@@ -356,7 +393,7 @@ export default function Mines() {
 
         {/* Auto Mode Configuration */}
         {mode === "auto" && (
-          <div className="space-y-2 rounded-xl bg-surface-2/40 p-3 border border-border/60">
+          <div className="space-y-3 rounded-xl bg-surface-2/40 p-3 border border-border/60">
             <div className="flex items-center justify-between text-xs font-bold">
               <span>Selected Tiles: {autoPicks.length}</span>
               <span className="text-muted-foreground text-[11px]">(Click or drag over tiles)</span>
@@ -372,6 +409,135 @@ export default function Mines() {
                 onChange={(e) => setAutoBets(e.target.value)}
                 className="w-full rounded-lg bg-surface-2 px-3 py-1.5 text-xs font-mono font-bold text-foreground border border-border/50 focus:outline-none"
               />
+            </div>
+
+            {/* Advanced Section matching Image 3 */}
+            {advOpen && (
+              <div className="space-y-3 pt-2 border-t border-white/5 animate-fade-up">
+                {/* On Win */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-white">On win</label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex rounded-lg bg-[#141720] p-1 border border-white/10 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setOnWinAction("reset")}
+                        className={cn(
+                          "px-2.5 py-1 text-xs font-bold rounded transition",
+                          onWinAction === "reset" ? "bg-amber-500/25 border border-amber-500 text-amber-300" : "text-muted-foreground hover:text-white"
+                        )}
+                      >
+                        Reset
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOnWinAction("increase")}
+                        className={cn(
+                          "px-2.5 py-1 text-xs font-bold rounded transition",
+                          onWinAction === "increase" ? "bg-amber-500/25 border border-amber-500 text-amber-300" : "text-muted-foreground hover:text-white"
+                        )}
+                      >
+                        Increase
+                      </button>
+                    </div>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min="0"
+                        value={onWinPercent}
+                        onChange={(e) => setOnWinPercent(e.target.value)}
+                        disabled={onWinAction === "reset"}
+                        className="w-full rounded-lg bg-[#141720] border border-white/10 px-3 py-1 text-xs font-mono font-bold text-white text-right pr-6"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* On Loss */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-white">On loss</label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex rounded-lg bg-[#141720] p-1 border border-white/10 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setOnLossAction("reset")}
+                        className={cn(
+                          "px-2.5 py-1 text-xs font-bold rounded transition",
+                          onLossAction === "reset" ? "bg-amber-500/25 border border-amber-500 text-amber-300" : "text-muted-foreground hover:text-white"
+                        )}
+                      >
+                        Reset
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOnLossAction("increase")}
+                        className={cn(
+                          "px-2.5 py-1 text-xs font-bold rounded transition",
+                          onLossAction === "increase" ? "bg-amber-500/25 border border-amber-500 text-amber-300" : "text-muted-foreground hover:text-white"
+                        )}
+                      >
+                        Increase
+                      </button>
+                    </div>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min="0"
+                        value={onLossPercent}
+                        onChange={(e) => setOnLossPercent(e.target.value)}
+                        disabled={onLossAction === "reset"}
+                        className="w-full rounded-lg bg-[#141720] border border-white/10 px-3 py-1 text-xs font-mono font-bold text-white text-right pr-6"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stop on win & Stop on loss */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-white">Stop on win</label>
+                    <div className="flex items-center gap-1.5 rounded-lg bg-[#141720] border border-white/10 px-2.5 py-1.5">
+                      <Coin className="size-3.5 shrink-0" />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={stopOnWin}
+                        onChange={(e) => setStopOnWin(e.target.value)}
+                        className="w-full bg-transparent text-xs font-mono font-bold text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-white">Stop on loss</label>
+                    <div className="flex items-center gap-1.5 rounded-lg bg-[#141720] border border-white/10 px-2.5 py-1.5">
+                      <Coin className="size-3.5 shrink-0" />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={stopOnLoss}
+                        onChange={(e) => setStopOnLoss(e.target.value)}
+                        className="w-full bg-transparent text-xs font-mono font-bold text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Advanced toggle bar with Chevron */}
+            <div
+              className="flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
+              onClick={() => setAdvOpen(!advOpen)}
+            >
+              <span className="text-xs font-bold text-muted-foreground">Advanced</span>
+              <div className="flex items-center gap-2">
+                <div className={cn("w-8 h-4 rounded-full transition-colors p-0.5", advOpen ? "bg-[#00d293]" : "bg-white/20")}>
+                  <div className={cn("size-3 rounded-full bg-white transition-transform", advOpen && "translate-x-4")} />
+                </div>
+                <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", advOpen && "rotate-180")} />
+              </div>
             </div>
           </div>
         )}

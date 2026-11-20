@@ -14,6 +14,7 @@ const HOME = [
 ] as const;
 
 const LIBRARY = [
+  { to: "/rank-progression", label: "Rank Progression", icon: Trophy },
   { to: "/shop", label: "Shop", icon: ShoppingBag },
   { to: "/stats", label: "Profile Stats", icon: BarChart3 },
   { to: "/rewards", label: "Rewards & Quests", icon: Gift },
