@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type PointerEvent as RPointerEvent, type MouseEvent as RMouseEvent } from "react";
 import { Shuffle, Play, Square, Gem, ChevronDown } from "lucide-react";
 import { GameLayout, StatBox, ResultToast } from "./GameLayout";
 import { useBetAmount, useSession } from "./useGame";
@@ -58,26 +58,103 @@ export default function Mines() {
     if (r) sfx.bet();
   }
 
-  async function reveal(t: number) {
-    if (!active || revealed.includes(t) || pending === t) return;
-    setPending(t);
-    sfx.gem();
-    const r = await action("reveal", { tile: t });
-    setPending(null);
-    if (!r) return;
-    if (r.session.status === "lost") sfx.boom();
-    else if (r.session.status === "won") { setTimeout(sfx.win, 150); }
+  // Reveals are queued so dragging across many tiles sends them one at a time, in order.
+  const revealQueue = useRef<number[]>([]);
+  const queueRunning = useRef(false);
+  const [queued, setQueued] = useState<number[]>([]);
+  const liveRef = useRef({ active, revealed: [] as number[] });
+  liveRef.current = { active, revealed: session?.revealed ?? [] };
+
+  async function processQueue() {
+    if (queueRunning.current) return;
+    queueRunning.current = true;
+    while (revealQueue.current.length > 0) {
+      const t = revealQueue.current.shift()!;
+      setQueued([...revealQueue.current]);
+      setPending(t);
+      sfx.gem();
+      const r = await action("reveal", { tile: t });
+      setPending(null);
+      if (!r || r.session.status !== "active") {
+        if (r?.session.status === "lost") sfx.boom();
+        else if (r?.session.status === "won") setTimeout(sfx.win, 150);
+        revealQueue.current = [];
+        setQueued([]);
+        break;
+      }
+    }
+    queueRunning.current = false;
   }
 
+  function reveal(t: number) {
+    const live = liveRef.current;
+    if (!live.active || live.revealed.includes(t) || revealQueue.current.includes(t) || pending === t) return;
+    revealQueue.current.push(t);
+    setQueued([...revealQueue.current]);
+    void processQueue();
+  }
+
+  // Drag across tiles: in a round it reveals each tile, in Auto setup it selects/unselects.
+  const drag = useRef<{ on: boolean; kind: "reveal" | "add" | "remove"; seen: Set<number> }>({ on: false, kind: "reveal", seen: new Set() });
+
+  function applyTile(i: number, first: boolean) {
+    const d = drag.current;
+    if (d.seen.has(i)) return;
+    d.seen.add(i);
+    if (mode === "auto" && !active && !autoRunning) {
+      setAutoPicks((prev) => {
+        if (first) d.kind = prev.includes(i) ? "remove" : "add";
+        if (d.kind === "remove") return prev.filter((p) => p !== i);
+        if (prev.includes(i) || prev.length >= safeTilesCount) return prev;
+        return [...prev, i];
+      });
+      return;
+    }
+    if (mode === "manual") reveal(i);
+  }
+
+  function tileAt(x: number, y: number): number | null {
+    const el = document.elementFromPoint(x, y)?.closest("[data-tile]") as HTMLElement | null;
+    if (!el || el.hasAttribute("disabled")) return null;
+    return Number(el.dataset["tile"]);
+  }
+
+  function onGridPointerDown(e: RPointerEvent) {
+    if (e.button !== 0) return;
+    const i = tileAt(e.clientX, e.clientY);
+    if (i === null) return;
+    e.preventDefault();
+    drag.current = { on: true, kind: "reveal", seen: new Set() };
+    applyTile(i, true);
+  }
+
+  function onGridPointerMove(e: RPointerEvent) {
+    if (!drag.current.on) return;
+    const i = tileAt(e.clientX, e.clientY);
+    if (i !== null) applyTile(i, false);
+  }
+
+  useEffect(() => {
+    const end = () => { drag.current.on = false; };
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    return () => {
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+    };
+  }, []);
+
   async function cashout() {
+    revealQueue.current = [];
+    setQueued([]);
     const r = await action("cashout");
     if (r) sfx.cashout();
   }
 
   function randomPick() {
-    const free = Array.from({ length: totalTiles }, (_, i) => i).filter((i) => !revealed.includes(i));
+    const free = Array.from({ length: totalTiles }, (_, i) => i).filter((i) => !revealed.includes(i) && !revealQueue.current.includes(i));
     if (free.length > 0) {
-      void reveal(free[Math.floor(Math.random() * free.length)]);
+      reveal(free[Math.floor(Math.random() * free.length)]);
     }
   }
 
@@ -282,7 +359,7 @@ export default function Mines() {
           <div className="space-y-2 rounded-xl bg-surface-2/40 p-3 border border-border/60">
             <div className="flex items-center justify-between text-xs font-bold">
               <span>Selected Tiles: {autoPicks.length}</span>
-              <span className="text-muted-foreground text-[11px]">(Click grid to pick pattern)</span>
+              <span className="text-muted-foreground text-[11px]">(Click or drag over tiles)</span>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-muted-foreground">Number of Bets</label>
@@ -346,7 +423,11 @@ export default function Mines() {
     }>
       <div className="grid h-full place-items-center p-4 md:p-8">
         <div className="relative w-full max-w-[560px]">
-          <div className={cn("grid gap-2 md:gap-2.5", currentGridOption.classCols)}>
+          <div
+            className={cn("grid gap-2 md:gap-2.5 select-none", currentGridOption.classCols, (active || (mode === "auto" && !autoRunning)) && "touch-none")}
+            onPointerDown={onGridPointerDown}
+            onPointerMove={onGridPointerMove}
+          >
             {Array.from({ length: totalTiles }, (_, i) => {
               const isRev = revealed.includes(i);
               const isMine = ended && minePos.includes(i);
@@ -354,19 +435,17 @@ export default function Mines() {
               const showGem = isRev || (ended && !minePos.includes(i));
               const isAutoSelected = mode === "auto" && !active && autoPicks.includes(i);
 
-              const handleTileClick = () => {
-                if (mode === "auto" && !active && !autoRunning) {
-                  setAutoPicks((prev) =>
-                    prev.includes(i) ? prev.filter((p) => p !== i) : prev.length < safeTilesCount ? [...prev, i] : prev
-                  );
-                  return;
-                }
-                reveal(i);
+              // Mouse/touch are handled by the grid's drag handlers; this keeps keyboard (Enter/Space) working.
+              const handleTileClick = (e: RMouseEvent) => {
+                if (e.detail !== 0) return;
+                drag.current = { on: false, kind: "reveal", seen: new Set() };
+                applyTile(i, true);
               };
 
               return (
                 <button
                   key={i}
+                  data-tile={i}
                   onClick={handleTileClick}
                   disabled={(!active && mode === "manual") || (active && isRev)}
                   className={cn(
@@ -377,7 +456,7 @@ export default function Mines() {
                     isRev && "bg-background ring-2 ring-success/60",
                     ended && !isRev && "bg-background",
                     hit && "bg-destructive/25 ring-2 ring-destructive",
-                    pending === i && "animate-pulse"
+                    (pending === i || queued.includes(i)) && "animate-pulse ring-2 ring-primary/50"
                   )}
                 >
                   {isAutoSelected && !active && !ended && (
