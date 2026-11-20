@@ -184,48 +184,16 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const games = q.trim() ? GAMES.filter((g) => g.name.toLowerCase().includes(q.toLowerCase())).slice(0, 5) : [];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[#1e1735]/80 bg-[#0d091a]/90 px-4 backdrop-blur-xl">
-      <button onClick={onMenu} className="rounded-lg p-2 text-muted-foreground hover:bg-white/5 hover:text-foreground lg:hidden" aria-label="Open menu"><Menu className="size-5" /></button>
-
-      {/* Nav Tabs (Matching media_1795122310240_318d206c.jpg) */}
-      <nav className="hidden lg:flex items-center gap-1 text-xs font-black tracking-wider uppercase text-muted-foreground mr-1">
-        <Link
-          to="/"
-          className="px-3 py-1.5 rounded-lg text-foreground hover:text-primary transition-colors"
-        >
-          HOME
-        </Link>
-        <GamesMenu />
-        <Link
-          to="/clubs"
-          className="px-3 py-1.5 rounded-lg text-amber-400/90 hover:text-amber-300 transition-colors"
-        >
-          CLUBS
-        </Link>
-        <Link
-          to="/rewards"
-          className="px-3 py-1.5 rounded-lg hover:text-foreground transition-colors"
-        >
-          REWARDS
-        </Link>
-        <Link
-          to="/vault"
-          className="px-3 py-1.5 rounded-lg hover:text-foreground transition-colors"
-        >
-          VAULT
-        </Link>
-      </nav>
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl">
+      <button onClick={onMenu} className="rounded-lg p-2 text-muted-foreground hover:bg-surface-2 hover:text-foreground lg:hidden" aria-label="Open menu"><Menu className="size-5" /></button>
+      <GamesMenu />
 
       <div ref={box} className="relative hidden w-full max-w-xs md:block">
-        <div className="relative overflow-hidden rounded-full">
-          <Search className="absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/70 z-10" />
-          <input
-            value={q}
-            onChange={(e) => { setQ(e.target.value); setOpen(true); }}
-            onFocus={() => setOpen(true)}
-            placeholder="Search..."
-            className="h-9 w-full rounded-full border border-border/50 bg-[#16102a]/80 pl-9 pr-4 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary/60 focus:bg-[#1a1333]"
-          />
+        <div className="relative overflow-hidden rounded-lg">
+          <SnowCap withLights={false} className="top-0 inset-x-0 opacity-80 z-20" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground z-10" />
+          <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} placeholder="Search games & players"
+            className="h-10 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/60" />
         </div>
         {open && q.trim() && (
           <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-card animate-fade-up">
@@ -251,11 +219,11 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         )}
       </div>
 
-      <div className="mx-auto flex items-center rounded-full border border-border/50 bg-[#16102a]/80 py-1 px-3 md:mx-0 md:ml-auto md:mr-auto shadow-sm">
-        <Amount value={balance} className={cn("text-xs font-mono font-bold transition-colors", bump === "up" && "text-success", bump === "down" && "text-destructive")} />
-        <Link to="/vault" className="ml-2.5 rounded-full bg-primary/20 px-2.5 py-0.5 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors flex items-center gap-1">
-          <Vault className="size-3" /> Vault
-        </Link>
+      <div className="mx-auto flex items-center rounded-xl border border-border bg-surface p-1 pl-3 md:mx-0 md:ml-auto md:mr-auto">
+        <Amount value={balance} className={cn("min-w-[110px] text-sm transition-colors", bump === "up" && "text-success", bump === "down" && "text-destructive")} />
+        <Button asChild size="sm" className="ml-2">
+          <Link to="/vault"><Vault /> Vault</Link>
+        </Button>
       </div>
 
       <div className="flex items-center gap-1.5">
