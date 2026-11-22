@@ -36,6 +36,11 @@
   --color-success-foreground: var(--success-foreground);
   --color-gold: var(--gold);
   --color-surface: var(--surface);
+  --color-club-vip: var(--club-vip);
+  --color-club-vip-plus: var(--club-vip-plus);
+  --color-club-mvp: var(--club-mvp);
+  --color-club-mvp-plus: var(--club-mvp-plus);
+  --color-club-premium: var(--club-premium);
   --color-arena: var(--arena);
   --color-arena-deep: var(--arena-deep);
   --color-arena-glow: var(--arena-glow);
@@ -97,6 +102,11 @@
   --success: #00d293;
   --success-foreground: #05261b;
   --gold: #f59e0b;
+  --club-vip: #fbbf24;
+  --club-vip-plus: #fb7a3c;
+  --club-mvp: #22d3ee;
+  --club-mvp-plus: #c084fc;
+  --club-premium: #34f5b4;
   --arena: #14122a;
   --arena-deep: #0b0c16;
   --arena-glow: #7c5cff;
