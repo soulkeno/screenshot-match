@@ -12,9 +12,8 @@ import { useEquippedStyles } from "@/lib/cosmetics";
 type P = { id: string; username: string; avatar_url: string | null; total_wagered: number };
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
-  const { profile, chatOpen, setChatOpen, setSettingsOpen, openProfile, setCosmeticsOpen } = useApp();
-  const equipped = useEquippedStyles();
-  const balance = profile?.balance ?? 0;
+  const { profile, userId, balance, chatOpen, setChatOpen, setSettingsOpen, openProfile, setCosmeticsOpen } = useApp();
+  const equipped = useEquippedStyles(userId);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);

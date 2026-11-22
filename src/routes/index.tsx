@@ -63,7 +63,7 @@ export function Home() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           const list: WinnerItem[] = data.map((b, idx) => ({
-            id: b.id,
+            id: String(b.id),
             game: b.game,
             username: b.username || "Player",
             payout: Number(b.payout),
@@ -80,7 +80,7 @@ export function Home() {
         if (Number(b.payout) > Number(b.wager)) {
           setWinners((prev) => [
             {
-              id: b.id,
+              id: String(b.id),
               game: b.game,
               username: b.username || "Player",
               payout: Number(b.payout),

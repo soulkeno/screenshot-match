@@ -36,6 +36,13 @@
   --color-success-foreground: var(--success-foreground);
   --color-gold: var(--gold);
   --color-surface: var(--surface);
+  --color-arena: var(--arena);
+  --color-arena-deep: var(--arena-deep);
+  --color-arena-glow: var(--arena-glow);
+  --color-podium-gold: var(--podium-gold);
+  --color-podium-silver: var(--podium-silver);
+  --color-podium-bronze: var(--podium-bronze);
+  --color-podium-slate: var(--podium-slate);
   --color-surface-2: var(--surface-2);
   --color-felt: var(--felt);
   --color-felt-deep: var(--felt-deep);
@@ -90,6 +97,13 @@
   --success: #00d293;
   --success-foreground: #05261b;
   --gold: #f59e0b;
+  --arena: #14122a;
+  --arena-deep: #0b0c16;
+  --arena-glow: #7c5cff;
+  --podium-gold: #fbbf24;
+  --podium-silver: #cbd5e1;
+  --podium-bronze: #d97745;
+  --podium-slate: #64748b;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --felt: #1a3d2c;
